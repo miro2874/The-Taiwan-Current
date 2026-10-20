@@ -172,6 +172,7 @@ function poolLines(){if(isEDay()){const c=LINES.filter(x=>!VOTE_RE.test(x));retu
 function nextLine(){if(!linePool.length)linePool=shuffle(poolLines());return linePool.pop()}
 
 // ---------- settings (#test) ----------
+const TURN=4,BLUR=false,BA=0,BB=0.07,CA=0.05,CB=0.15;   // lines turn with inertia only away from the coast (outline stays exact); contour blur off (it broke Taiwan's shape)
 const T={font:'serif',len:20,end:'line',over:'spread',pWait:true,pMax:false,pSlow:true,pPair:false,island:'AV',strait:'side',tws:'90',drift:2,mel:'finish',isle:'loop',bound:'mid',endHalo:true,endDim:true,inv:'bottom',epN:150,proj:true,jit:true,wide:true,isleS:1.6,cam:'hold',isleLines:true,isleDark:true};
 try{Object.assign(T,JSON.parse(localStorage.getItem('hl-test6')||'{}'))}catch(e){}
 const FONTS={wenkai:"'LXGW WenKai TC','Klee One',serif",sans:"'Noto Sans TC',sans-serif",serif:"'Noto Serif TC',serif"};
@@ -285,13 +286,13 @@ function geoField(x,y,mode,strait,vinA,mode2){const sd=sdTW(x,y);const dd=sd.d/G
     else if(mode2==='wake'){const ex=x-P.cx,ey=y-P.cy,r=Math.hypot(ex,ey)||1,nx=ex/r,ny=ey/r;const vn=vv[0]*nx+vv[1]*ny;const w=di<=0?1:Math.exp(-Math.pow(di/(0.8*R+0.02),2));if(vn<0||di<=0)vv=nz([vv[0]-vn*nx*w,vv[1]-vn*ny*w]);
       const al=(ex*vv[0]+ey*vv[1])/G,la=(ex*vv[1]-ey*vv[0])/G;
       if(al>0&&di>0){const wig=0.7*Math.sin(al/(R*1.3)*Math.PI)*Math.exp(-Math.pow(la/(1.3*R),2))*Math.exp(-al/(6*R));const c=Math.cos(wig),s2=Math.sin(wig);vv=[vv[0]*c-vv[1]*s2,vv[0]*s2+vv[1]*c]}}}
-  return[vv[0],vv[1],dens]}
+  return[vv[0],vv[1],dens,dd]}
 const GB={lo0:114.5,lo1:127.5,la0:17.5,la1:29.5,step:0.03};
 const GX=Math.round((GB.lo1-GB.lo0)/GB.step)+1,GY=Math.round((GB.la1-GB.la0)/GB.step)+1;
-let GVX,GVY,GD,GDV;const GRIDS={};
+let GVX,GVY,GD,GDV,GCD;const GRIDS={};
 function softDist(x,y){let acc=0,wl=0;for(let i=0,j=TW.length-1;i<TW.length;j=i++){const[xi,yi]=TW[i],[xj,yj]=TW[j];const ex=xi-xj,ey=yi-yj,L2=ex*ex+ey*ey,L=Math.sqrt(L2);
   let u=((x-xj)*ex+(y-yj)*ey)/L2;u=clamp(u,0,1);const px=xj+ex*u-x,py=yj+ey*u-y;const d=Math.sqrt(px*px+py*py)/G+0.004;acc+=L*Math.pow(d,-4);wl+=L}return Math.pow(acc/wl,-0.25)}
-function useGrid(){const key=[T.island,T.strait,T.isle,T.isleS,T.proj,T.wide].join('|');if(!GRIDS[key]){const n=GX*GY,vx=new Float32Array(n),vy=new Float32Array(n),gd=new Float32Array(n),dv=new Float32Array(n);
+function useGrid(){const key=[T.island,T.strait,T.isle,T.isleS,T.proj,T.wide].join('|');if(!GRIDS[key]){const n=GX*GY,vx=new Float32Array(n),vy=new Float32Array(n),gd=new Float32Array(n),dv=new Float32Array(n),cd=new Float32Array(n).fill(9);
     const IN=(lon,lat)=>lon>119.8&&lon<122.2&&lat>21.7&&lat<25.5;
     let SD=null;if(T.island!=='C'){SD=new Float32Array(n);for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;if(!IN(lon,lat))continue;const[x,y]=geo(lon,lat);let v=softDist(x,y)*(sdTW(x,y).d<0?1:-1);   // signed: positive inside the island
       if(T.island==='AT')v*=Math.exp(-Math.hypot((lon-TPE[0])*CLAT,lat-TPE[1])/1.1);   // the loop's centre slides to Taipei
@@ -299,11 +300,11 @@ function useGrid(){const key=[T.island,T.strait,T.isle,T.isleS,T.proj,T.wide].jo
       // round off the sharp turns: blur the loop's contours in the island interior, keep them as they are near the coast
       const SD0=new Float32Array(SD),R=8;const bi0=Math.round((119.8-GB.lo0)/GB.step)+R,bi1=Math.round((122.2-GB.lo0)/GB.step)-R,bj0=Math.round((GB.la1-25.5)/GB.step)+R,bj1=Math.round((GB.la1-21.7)/GB.step)-R;
       for(let pass=0;pass<3;pass++){const B=new Float32Array(SD);for(let j=bj0;j<=bj1;j++)for(let i=bi0;i<=bi1;i++){const k=j*GX+i;let sum=0;for(let dj=-R;dj<=R;dj++){const row=k+dj*GX;for(let di=-R;di<=R;di++)sum+=SD[row+di]}B[k]=sum/((2*R+1)*(2*R+1))}SD.set(B)}
-      for(let k=0;k<n;k++){const w=SD0[k]>0?sstep(0.0,0.07,SD0[k])*sstep(0.0,0.06,SD[k]):0;SD[k]=SD0[k]*(1-w)+SD[k]*w}}
+      for(let k=0;k<n;k++){const w=!BLUR?0:SD0[k]>0?sstep(BA,BB,SD0[k])*sstep(0.0,0.06,SD[k]):0;SD[k]=SD0[k]*(1-w)+SD[k]*w}}
     for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;const k=j*GX+i;
       if(lon<117||lon>125||lat<19.5||lat>27.5){vx[k]=0.12;vy[k]=-1;gd[k]=0.07;continue}
       let vinA=null;if(SD&&IN(lon,lat)&&i>0&&j>0&&i<GX-1&&j<GY-1){const gx=(SD[k+1]-SD[k-1])/CLAT,gy=(SD[k+GX]-SD[k-GX]);const L=Math.hypot(gx,gy);if(L>1e-9)vinA=[-gy/L,gx/L]}
-      const[x,y]=geo(lon,lat);const f=geoField(x,y,T.island,T.strait,vinA,T.isle);vx[k]=f[0];vy[k]=f[1];gd[k]=f[2]}
+      const[x,y]=geo(lon,lat);const f=geoField(x,y,T.island,T.strait,vinA,T.isle);vx[k]=f[0];vy[k]=f[1];gd[k]=f[2];cd[k]=f[3]}
     if(T.proj){ // remove convergence: Helmholtz projection on the area around Taiwan (Jacobi), so no current can pile lines into a seam
       const i0=Math.round((117-GB.lo0)/GB.step),i1=Math.round((125-GB.lo0)/GB.step),j0=Math.round((GB.la1-27.5)/GB.step),j1=Math.round((GB.la1-19.5)/GB.step);
       const dx=CLAT,ax=1/(dx*dx),den=2*ax+2;const P=new Float32Array(n),P2=new Float32Array(n),DIV=new Float32Array(n);
@@ -312,8 +313,9 @@ function useGrid(){const key=[T.island,T.strait,T.isle,T.isleS,T.proj,T.wide].jo
         for(let j=j0;j<=j1;j++){b[j*GX+i0]=b[j*GX+i0+1];b[j*GX+i1]=b[j*GX+i1-1]}for(let i=i0;i<=i1;i++){b[j0*GX+i]=b[(j0+1)*GX+i];b[j1*GX+i]=b[(j1-1)*GX+i]}const tmp=a;a=b;b=tmp}
       for(let j=j0+1;j<j1;j++)for(let i=i0+1;i<i1;i++){const k=j*GX+i;vx[k]-=(a[k+1]-a[k-1])/(2*dx);vy[k]-=(a[k+GX]-a[k-GX])/2}}
     for(let j=1;j<GY-1;j++)for(let i=1;i<GX-1;i++){const k=j*GX+i;dv[k]=((vx[k+1]-vx[k-1])/CLAT+(vy[k+GX]-vy[k-GX]))/(2*GB.step)}   // <0 where currents converge
-    GRIDS[key]=[vx,vy,gd,dv]}
-  [GVX,GVY,GD,GDV]=GRIDS[key]}
+    GRIDS[key]=[vx,vy,gd,dv,cd]}
+  [GVX,GVY,GD,GDV,GCD]=GRIDS[key]}
+function coastW(x,y){const[lon,lat]=ungeo(x,y);const i=Math.round((lon-GB.lo0)/GB.step),j=Math.round((GB.la1-lat)/GB.step);if(i<1||j<1||i>=GX-1||j>=GY-1)return 1;return sstep(CA,CB,Math.abs(GCD[j*GX+i]))}
 function gdiv(x,y){const[lon,lat]=ungeo(x,y);const i=Math.round((lon-GB.lo0)/GB.step),j=Math.round((GB.la1-lat)/GB.step);if(i<1||j<1||i>=GX-1||j>=GY-1)return 0;return GDV[j*GX+i]}
 useGrid();
 function gsample(x,y){const[lon,lat]=ungeo(x,y);const fi=(lon-GB.lo0)/GB.step,fj=(GB.la1-lat)/GB.step;
@@ -520,7 +522,7 @@ function fillText(c,s,x,y,size,weight){const fam=FONTS[T.font];
 function measure(c,s,size){c.font=`400 ${size}px ${FONTS[T.font]}`;return c.measureText(s).width}
 
 // ---------- step ----------
-const TURN=4,QUIET=9,SPD=1.3,TOUCH=matchMedia('(pointer: coarse)').matches;   // player speed (playtest: 1.3x)
+const QUIET=9,SPD=1.3,TOUCH=matchMedia('(pointer: coarse)').matches;   // player speed (playtest: 1.3x)
 function step(dt){
   S.t+=dt;const t=S.t;const sc=1/zf();
   const playing=S.phase!=='title';
@@ -565,9 +567,9 @@ function step(dt){
   for(const v of S.vort){const an=fieldAngle(v.x,v.y,t);v.x+=Math.cos(an)*8*sc*dt;v.y+=Math.sin(an)*8*sc*dt;if(Math.abs(v.x-S.camx)>hw*1.5||Math.abs(v.y-S.camy)>hh*1.5)Object.assign(v,newVort(hw*0.85,hh*0.85))}
   const fr=S.mergeClock++,rec=(fr%3)===0,N=activeLines();
   const ki=1-Math.exp(-dt*TURN);
-  for(let i=0;i<N;i++){const q=fl[i];let[vx,vy]=vel(q.x,q.y,t);if(q.ux==null){q.ux=vx;q.uy=vy}else{q.ux+=(vx-q.ux)*ki;q.uy+=(vy-q.uy)*ki;const ul=Math.hypot(q.ux,q.uy)||1;q.ux/=ul;q.uy/=ul;vx=q.ux;vy=q.uy}const gm=(i+fr)%4===0?(q.gm=gmag(q.x,q.y)):(q.gm||1);q.x+=vx*80*q.sp*gm*sc*fs*vs*dt;q.y+=vy*80*q.sp*gm*sc*fs*vs*dt;q.age+=dt*60;
+  for(let i=0;i<N;i++){const q=fl[i];let[vx,vy]=vel(q.x,q.y,t);if(q.ux==null||!(q.cw>0)){q.ux=vx;q.uy=vy}else{const kk=ki*q.cw+(1-q.cw);q.ux+=(vx-q.ux)*kk;q.uy+=(vy-q.uy)*kk;const ul=Math.hypot(q.ux,q.uy)||1;q.ux/=ul;q.uy/=ul;vx=q.ux;vy=q.uy}const gm=(i+fr)%4===0?(q.gm=gmag(q.x,q.y)):(q.gm||1);q.x+=vx*80*q.sp*gm*sc*fs*vs*dt;q.y+=vy*80*q.sp*gm*sc*fs*vs*dt;q.age+=dt*60;
     if(rec){q.h.push(q.x,q.y);if(q.h.length>84)q.h.splice(0,2)}
-    if((i+fr)%12===0){q.dn=dens(q.x,q.y);q.cv=Math.max(0,-gdiv(q.x,q.y))}
+    if((i+fr)%12===0){q.dn=dens(q.x,q.y);q.cv=Math.max(0,-gdiv(q.x,q.y));q.cw=coastW(q.x,q.y)}
     {const th=(q.dn==null||q.dn<0.6)?1.8:5;if(q.cv>th)q.age+=dt*60*Math.min(15,(q.cv-th)*1.6)}
     if(q.age>q.life||Math.abs(q.x-S.camx)>hw*1.2||Math.abs(q.y-S.camy)>hh*1.2)Object.assign(q,newLine(hw,hh,false))}
   if(T.isleLines){const z=Z();ISLES.forEach((P,pi)=>{const pool=isleLines[pi]||(isleLines[pi]=[]);
