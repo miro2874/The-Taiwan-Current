@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="一點一滴，匯成洋流。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="匯聚洋流">
+<meta property="og:description" content="一點一滴，匯成洋流。">
+<meta property="og:url" content="https://miro2874.github.io/The-Taiwan-Current/">
+<meta property="og:image" content="https://miro2874.github.io/The-Taiwan-Current/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>html,body{margin:0;height:100%;background:#fbf9f3}[hidden]{display:none!important}</style>
+<title>匯聚洋流</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&family=Klee+One&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap">
+<style>
+/* layout: one full-bleed canvas; the only UI is the start title, the composer and the hidden #test panel */
+:root{
+  --ink:#161412; --cream:#fbf9f3; --orange:#E8561B; --deep:#b03a0e; --mute:#6b5f55; --line:#d9cfc2;
+  --f-wenkai:'LXGW WenKai TC','Klee One','Noto Serif TC',serif;
+  --f-sans:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  --f-serif:'Noto Serif TC','Songti TC','PMingLiU',serif;
+  --f:var(--f-wenkai);
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--cream);color:var(--ink);font-family:var(--f);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1.6s ease}
+#start h1{margin:0;font:400 clamp(30px,7vw,54px)/1 var(--f);letter-spacing:.35em;padding-left:.35em;color:var(--ink);background:rgba(251,249,243,.72);padding:.5em .6em .5em .95em}
+#start.gone{opacity:0;pointer-events:none}
+#compose{position:fixed;inset:0;display:flex;opacity:0;transition:opacity .6s ease;align-items:center;justify-content:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;background:rgba(251,249,243,.55);z-index:10;-webkit-user-select:text;user-select:text;touch-action:auto}
+.card{transform:translateY(14px);transition:transform .7s cubic-bezier(.2,.7,.2,1);width:min(460px,100%);max-height:calc(100% - 8px);overflow:auto;background:var(--cream);border:1.5px solid var(--ink);padding:22px 20px 18px;display:flex;flex-direction:column;gap:14px;font-family:var(--f)}
+.card h2{margin:0;font:400 19px/1.55 var(--f);text-wrap:balance}
+.card .lab{font:500 12px var(--f-sans);letter-spacing:.14em;color:var(--mute)}
+.presets{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow:auto;padding-right:2px}
+.presets button,.words button{font:400 15px/1.45 var(--f);text-align:left;background:transparent;border:1px solid var(--line);color:var(--ink);padding:7px 11px;cursor:pointer}
+.presets button[aria-pressed="true"],.words button[aria-pressed="true"]{border-color:var(--orange);background:rgba(232,86,27,.1)}
+.blank{font:400 16px/1.9 var(--f);display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.blank input{font:400 16px var(--f);width:9.5em;border:0;border-bottom:1.5px solid var(--ink);background:transparent;padding:2px 4px;color:var(--deep);outline:none}
+.blank input:focus{border-bottom-color:var(--orange)}
+.words{display:flex;flex-wrap:wrap;gap:6px}
+.words button{padding:4px 10px;font-size:14px}
+.err{min-height:1.4em;font:400 13px var(--f-sans);color:var(--deep)}
+.acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.acts button{font:500 15px var(--f);padding:8px 16px;cursor:pointer;border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
+.acts .go{background:var(--orange);border-color:var(--orange);color:var(--cream)}
+.acts .go:disabled{opacity:.4;cursor:default}
+#compose.show{opacity:1}#compose.show .card{transform:none}
+@media (prefers-reduced-motion:reduce){#compose,.card{transition:none}}
+button:focus-visible,input:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+#test{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:max(10px,env(safe-area-inset-right,0px));z-index:20;background:rgba(22,20,18,.9);color:var(--cream);font:500 12px var(--f-sans);padding:10px 12px;display:flex;flex-direction:column;gap:7px;max-width:250px;touch-action:auto}
+#test b{letter-spacing:.12em;color:#f2a27a}
+#test label{display:flex;justify-content:space-between;gap:8px;align-items:center}
+#test select,#test button{font:500 12px var(--f-sans);background:#2a2623;color:var(--cream);border:1px solid #6b5f55;padding:3px 4px}
+#test button{cursor:pointer}
+#test .row{display:flex;gap:6px;flex-wrap:wrap}
+#test .chk{display:flex;gap:6px;align-items:center;justify-content:flex-start}
+</style>
+
+<canvas id="c" aria-label="匯聚洋流：操控一顆小水滴在洋流裡漂流"></canvas>
+<div id="start" role="button" tabindex="0" aria-label="點一下開始"><h1>匯聚洋流</h1></div>
+
+<div id="compose" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="cTitle">
+    <h2 id="cTitle"></h2>
+    <div class="lab">挑一句</div>
+    <div class="presets" id="cPresets"></div>
+    <div class="lab">或是填空</div>
+    <div class="blank"><span id="cBefore"></span><input id="cInput" maxlength="8" autocomplete="off" aria-label="填空"><span id="cAfter"></span></div>
+    <div class="words" id="cWords"></div>
+    <div class="err" id="cErr" aria-live="polite"></div>
+    <div class="acts"><button id="cNo">先不要</button><button class="go" id="cGo" disabled>放進洋流</button></div>
+  </div>
+</div>
+
+<div id="test" hidden>
+  <b>試玩設定</b>
+  <label>台詞字型<select id="tFont"><option value="wenkai">霞鶩文楷</option><option value="sans">思源黑體</option><option value="serif">思源宋體</option></select></label>
+  <label>一輪長度<select id="tLen"><option value="20">約 2 分鐘（20 滴）</option><option value="40">約 3–5 分鐘（40 滴）</option></select></label>
+  <label>尾聲文字<select id="tEnd"><option value="none">不要字</option><option value="date">11.28</option><option value="line">一點一滴，匯成洋流</option></select></label>
+  <label>台詞重疊<select id="tOver"><option value="spread">各自錯開</option><option value="queue">排隊</option><option value="replace">新的推走舊的</option></select></label>
+  <label>島內流法<select id="tIsland"><option value="A">繞全島一大圈</option><option value="AT">大圈，中心在台北</option><option value="AV">大圈＋台北漩渦</option><option value="C">北→南＋漩渦</option></select></label>
+  <label>外島的流<select id="tIsle"><option value="loop">繞島一圈</option><option value="wake">繞過島留尾流</option><option value="dens">只用疏密</option></select></label>
+  <label>可游範圍<select id="tBound"><option value="near">澎湖綠島蘭嶼一帶</option><option value="mid">海峽中線附近</option><option value="view">看得到台灣一角</option></select></label>
+  <label>邀請呈現<select id="tInv"><option value="float">漂來漂去</option><option value="follow">跟著你的水滴</option><option value="bottom">下方中央呼吸</option></select></label>
+  <label>海峽<select id="tStrait"><option value="south">整片往南</option><option value="side">兩股並排</option><option value="west">交會轉向西</option></select></label>
+  <label>尾聲台灣大小<select id="tTws"><option value="75">高度約 75%</option><option value="90">高度約 90%</option><option value="auto">直向 75%／橫向 90%</option></select></label>
+  <label>漂移速度<select id="tDrift"><option value="1">×1</option><option value="2">×2</option><option value="3">×3</option></select></label>
+  <label>旋律對應<select id="tMel"><option value="finish">一滴一音，尾聲接完</option><option value="bar">一滴一小節</option><option value="note">一滴一音，彈到哪算哪</option></select></label>
+  <label>尾聲水滴數<select id="tEpN"><option value="80">約 80 顆</option><option value="150">約 150 顆</option><option value="300">約 300 顆</option></select></label>
+  <label>外島放大<select id="tIsleS"><option value="1">原尺寸</option><option value="1.6">約 1.6 倍</option><option value="2">約 2 倍</option></select></label>
+  <label>停下時鏡頭<select id="tCam"><option value="hold">停在原地</option><option value="follow">跟著你、別人漂得快</option></select></label>
+  <b>外島輪廓（可疊加）</b>
+  <label class="chk"><input type="checkbox" id="isleLines">外島上自己的一組線</label>
+  <label class="chk"><input type="checkbox" id="isleDark">尾聲時外島的線深一點</label>
+  <b>交匯線修法（可疊加）</b>
+  <label class="chk"><input type="checkbox" id="proj">不會匯聚的流</label>
+  <label class="chk"><input type="checkbox" id="jit">水滴帶隨機晃動</label>
+  <label class="chk"><input type="checkbox" id="wide">轉換帶加寬</label>
+  <b>尾聲的字（可疊加）</b>
+  <label class="chk"><input type="checkbox" id="endHalo">字後面淡淡的光暈</label>
+  <label class="chk"><input type="checkbox" id="endDim">中間一圈暫時變淡</label>
+  <b>節奏（可疊加）</b>
+  <label class="chk"><input type="checkbox" id="pWait">要停久一點才有人來</label>
+  <label class="chk"><input type="checkbox" id="pMax">同時最多兩顆朝你來</label>
+  <label class="chk"><input type="checkbox" id="pSlow">靠近得更慢</label>
+  <label class="chk"><input type="checkbox" id="pPair">先並排漂一下才融合</label>
+  <div class="row"><button id="tSkip">直接到門檻</button><button id="tClear">清除我留的那滴</button></div>
+  <span id="tInfo" style="color:#c9bfb2"></span>
+</div>
+
+<script>
+(function(){
+'use strict';
+// ---------- palette ----------
+const INK=[22,20,18], CREAM=[251,249,243], OR=[232,86,27];
+const ORS=[[176,58,14],[232,86,27],[244,150,104]];
+const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
+
+// ---------- data (files override these fallbacks) ----------
+let LINES=["我也以為只有我在乎。","原來你也在這裡。","一滴水推不動什麼，可是我們不只一滴。","慢一點沒關係，我們一起漂。","回頭看，好多人。","十一月二十八日，見。"];
+let COMPOSE={inviteShort:"成為小水滴",title:"要不要成為一滴水，尋找並陪伴下一個小水滴？",presets:LINES.slice(),blank:{before:"這次，我想為",after:"站出來。",maxLen:8,words:["家人","孩子","這座城市","台灣"]}};
+let FILTER={words:["幹","白痴","智障","去死"],patterns:["https?://","\\d{5,}"]};
+let MELODY=[],BARS=[],BPM=76;   // bars of [note, beats]; empty → random pentatonic pitch
+const load=(u)=>fetch(u).then(r=>r.ok?r.json():Promise.reject()).catch(()=>null);
+Promise.all([load('data/lines.json'),load('data/compose.json'),load('data/filter.json'),load('data/melody.json')]).then(([l,c,f,m])=>{
+  if(m&&Array.isArray(m.bars)){BARS=m.bars;MELODY=BARS.flat();BPM=m.bpm||76}
+  if(l&&Array.isArray(l.lines)&&l.lines.length)LINES=l.lines;
+  if(c&&c.presets)COMPOSE=c;
+  if(f&&f.words)FILTER=f;
+  linePool=shuffle(LINES.slice());
+  pullLines();retryPending();
+});
+// ---------- shared current (Supabase): everyone's lines ----------
+const SB_URL='https://fcbdxrrwfpmxexivtttu.supabase.co',SB_KEY='sb_publishable_zBrPut3QwqBZjXvazO5liA_h8RTEdc5';
+function deviceId(){let d=null;try{d=localStorage.getItem('hl-device')}catch(e){}
+  if(!d||!/^[A-Za-z0-9-]{8,64}$/.test(d)){d=(crypto.randomUUID?crypto.randomUUID():'d'+Math.random().toString(36).slice(2)+Date.now().toString(36));try{localStorage.setItem('hl-device',d)}catch(e){}}return d}
+function rpc(name,body,ms){const ac=new AbortController();const to=setTimeout(()=>ac.abort(),ms);
+  return fetch(SB_URL+'/rest/v1/rpc/'+name,{method:'POST',signal:ac.signal,headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body||{})})
+    .then(r=>r.ok?r.json():Promise.reject(r.status)).finally(()=>clearTimeout(to))}
+function pullLines(){   // 3 s or fall back to the built-in lines
+  rpc('get_lines',{},3000).then(g=>{const cur=Array.isArray(g.curated)?g.curated:[],pl=Array.isArray(g.players)?g.players:[];
+    const all=[...new Set([...(cur.length?cur:LINES),...pl])].filter(x=>typeof x==='string'&&x.trim());
+    if(all.length){LINES=all;linePool=shuffle(LINES.slice())}S.online=true}).catch(()=>{S.online=false})}
+function pushLine(text){rpc('submit_line',{p_text:text,p_device:deviceId()},8000).then(r=>{
+    if(r&&(r.ok||r.reason==='blocked'||r.reason==='length'))setPending(false);else setPending(true)}).catch(()=>setPending(true))}
+function setPending(v){try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m){m.pending=v;localStorage.setItem('hl-mydrop',JSON.stringify(m))}}catch(e){}}
+function retryPending(){try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m&&m.pending&&m.text)pushLine(m.text)}catch(e){}}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let linePool=shuffle(LINES.slice());
+function nextLine(){if(!linePool.length)linePool=shuffle(LINES.slice());return linePool.pop()}
+
+// ---------- settings (#test) ----------
+const T={font:'serif',len:20,end:'line',over:'spread',pWait:true,pMax:false,pSlow:true,pPair:false,island:'AV',strait:'side',tws:'90',drift:2,mel:'finish',isle:'loop',bound:'mid',endHalo:true,endDim:true,inv:'follow',epN:150,proj:true,jit:true,wide:true,isleS:1.6,cam:'hold',isleLines:true,isleDark:true};
+try{Object.assign(T,JSON.parse(localStorage.getItem('hl-test6')||'{}'))}catch(e){}
+const FONTS={wenkai:"'LXGW WenKai TC','Klee One',serif",sans:"'Noto Sans TC',sans-serif",serif:"'Noto Serif TC',serif"};
+function applyFont(){document.documentElement.style.setProperty('--f',`var(--f-${T.font})`);
+  if(document.fonts&&document.fonts.load){document.fonts.load(`16px ${FONTS[T.font].split(',')[0]}`,'匯聚洋流為').catch(()=>{});document.fonts.load("16px 'Klee One'",'為').catch(()=>{})}}
+applyFont();
+
+// ---------- canvas ----------
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W=1,H=1,DPR=1,K=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;K=Math.sqrt(W*H)/900;buildPools()}
+
+// ---------- world state ----------
+const S={
+  t:Math.random()*50, phase:'title', // title → play → handoff → epilogue → free
+  px:0,py:0,pvx:0,pvy:0, n:0, R0:14,
+  zoom:1, ez:1, uz:1, camx:0,camy:0,
+  lastInput:-99, pointer:null, pressed:false, keys:{}, mouseIn:false,
+  others:[], absorb:[], labels:[], words:[], vort:[],
+  epT:0, e:0, tw:null, endA:0, inviteOn:false, inviteT:0, composed:false,
+  myDrop:null, mySpawned:false, mergeClock:0, pS:0
+};
+let fl=[],parts=[],twl=[],BASE=0,lineScale=1,isleLines=[];
+const total=()=>+T.len;
+const prog=()=>Math.min(1,S.n/total());
+const radius=()=>Math.sqrt(S.R0*S.R0+S.n*81);
+const zf=()=>S.zoom*S.ez;               // field scale: keeps line texture constant on screen while the camera pulls back
+const Z=()=>0.5*S.zoom*S.ez*S.uz;       // world → screen
+function view(){const z=Z();return{z,hw:W/2/z,hh:H/2/z}}
+
+// ---------- geography: the whole game takes place in Taiwan ----------
+const G=20000;                                  // world units per degree of latitude
+const CLAT=Math.cos(23.6*Math.PI/180);
+const geo=(lon,lat)=>[(lon-121)*CLAT*G,-(lat-23.6)*G];
+const ungeo=(x,y)=>[x/(CLAT*G)+121,23.6-y/G];
+const TW=[[121.54,25.30],[121.62,25.22],[121.75,25.17],[121.90,25.12],[122.00,25.01],[121.88,24.84],[121.83,24.62],[121.86,24.55],[121.73,24.30],[121.61,24.00],[121.53,23.70],[121.40,23.25],[121.24,22.93],[121.07,22.68],[120.92,22.33],[120.85,21.90],[120.73,21.93],[120.62,22.30],[120.45,22.48],[120.28,22.60],[120.17,22.95],[120.08,23.25],[120.15,23.60],[120.28,23.90],[120.43,24.15],[120.62,24.45],[120.90,24.80],[121.05,25.04],[121.30,25.12],[121.43,25.20]].map(([lo,la])=>geo(lo,la));
+const START=geo(121.52,25.04);                  // Taipei
+const TWC=(()=>{let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const[x,y]of TW){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}return{cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0,h:y1-y0}})();
+const nz=v=>{const L=Math.hypot(v[0],v[1])||1;return[v[0]/L,v[1]/L]};
+const sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+function sdTW(x,y){let best=1e18,tx=0,ty=1,ins=false;
+  for(let i=0,j=TW.length-1;i<TW.length;j=i++){const[xi,yi]=TW[i],[xj,yj]=TW[j];
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))ins=!ins;
+    const ex=xi-xj,ey=yi-yj,L2=ex*ex+ey*ey;let u=((x-xj)*ex+(y-yj)*ey)/L2;u=clamp(u,0,1);const px=xj+ex*u-x,py=yj+ey*u-y,d=px*px+py*py;
+    if(d<best){best=d;const L=Math.sqrt(L2);tx=ex/L;ty=ey/L}}
+  return{d:(ins?-1:1)*Math.sqrt(best),tx,ty}}
+// island eddies for the "north → south with meanders" version (lon, lat, radius°, spin)
+const EDDIES=[[121.05,24.62,0.17,1],[120.78,24.05,0.2,-1],[121.18,23.62,0.22,1],[120.62,23.2,0.17,-1],[121.0,22.95,0.15,1],[121.38,24.12,0.14,-1],[120.95,23.35,0.12,1]];
+// outlying islands, simplified outlines estimated from maps (lon, lat); small ones as ellipses
+const ell=(lo,la,rx,ry)=>{const p=[];for(let k=0;k<12;k++){const a=k/12*Math.PI*2;p.push([lo+Math.cos(a)*rx/CLAT,la+Math.sin(a)*ry])}return p};
+const ISLE_SHAPES=[
+  [[119.56,23.72],[119.63,23.73],[119.67,23.68],[119.70,23.62],[119.69,23.56],[119.64,23.52],[119.58,23.53],[119.55,23.56],[119.59,23.58],[119.61,23.62],[119.57,23.64],[119.54,23.67]],  // 澎湖本島＋白沙
+  [[119.51,23.67],[119.54,23.66],[119.54,23.60],[119.52,23.55],[119.49,23.56],[119.48,23.61]],   // 西嶼
+  ell(119.50,23.36,0.025,0.018),ell(119.43,23.21,0.02,0.014),                                     // 望安 七美
+  [[118.25,24.47],[118.30,24.49],[118.34,24.47],[118.38,24.49],[118.44,24.51],[118.47,24.47],[118.44,24.43],[118.39,24.42],[118.35,24.43],[118.31,24.41],[118.27,24.42]],   // 金門
+  ell(118.23,24.44,0.028,0.022),                                                                    // 小金門
+  ell(119.93,26.15,0.035,0.02),ell(119.99,26.22,0.035,0.02),ell(120.49,26.37,0.025,0.015),ell(119.94,25.97,0.03,0.015),   // 南竿 北竿 東引 莒光
+  ell(121.49,22.66,0.035,0.04),ell(121.55,22.04,0.05,0.05),ell(120.37,22.34,0.025,0.025),ell(121.95,24.84,0.02,0.015)];  // 綠島 蘭嶼 小琉球 龜山島
+let ISLES=[];   // built per scale: {pts (world), cx, cy, x0..y1, R (deg), ccw}
+function buildIsles(){ISLES=ISLE_SHAPES.map(sh=>{let cx=0,cy=0;for(const[lo,la]of sh){cx+=lo;cy+=la}cx/=sh.length;cy/=sh.length;
+    const pts=sh.map(([lo,la])=>geo(cx+(lo-cx)*T.isleS,cy+(la-cy)*T.isleS));let A=0,x0=1e18,x1=-1e18,y0=1e18,y1=-1e18;
+    for(let i=0,j=pts.length-1;i<pts.length;j=i++){A+=pts[j][0]*pts[i][1]-pts[i][0]*pts[j][1];x0=Math.min(x0,pts[i][0]);x1=Math.max(x1,pts[i][0]);y0=Math.min(y0,pts[i][1]);y1=Math.max(y1,pts[i][1])}
+    const[wx,wy]=geo(cx,cy);return{pts,cx:wx,cy:wy,x0,x1,y0,y1,R:Math.sqrt(Math.abs(A)/2)/G,ccw:A}})}
+function sdPoly(P,x,y){let best=1e18,tx=0,ty=1,ins=false;const p=P.pts;
+  for(let i=0,j=p.length-1;i<p.length;j=i++){const[xi,yi]=p[i],[xj,yj]=p[j];if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))ins=!ins;
+    const ex=xi-xj,ey=yi-yj,L2=ex*ex+ey*ey;let u=((x-xj)*ex+(y-yj)*ey)/L2;u=clamp(u,0,1);const qx=xj+ex*u-x,qy=yj+ey*u-y,d=qx*qx+qy*qy;if(d<best){best=d;const L=Math.sqrt(L2);tx=ex/L;ty=ey/L}}
+  const sgn=P.ccw>0?1:-1;   // orient the tangent so every island loops the same way on screen
+  return{d:(ins?-1:1)*Math.sqrt(best)/G,tx:-tx*sgn,ty:-ty*sgn}}
+buildIsles();
+const TPE=[121.52,25.04];
+const angLerp=(a,b,k)=>{let d=b-a;d=Math.atan2(Math.sin(d),Math.cos(d));return a+d*k};
+function geoField(x,y,mode,strait,vinA,mode2){const sd=sdTW(x,y);const dd=sd.d/G;const[lon,lat]=ungeo(x,y);
+  // ---- inside the island
+  let vin;
+  if(mode==='A'||mode==='AT'||mode==='AV'){ // one big counter-clockwise loop along the contours of distance-to-coast (divergence-free: no sinks, no pile-ups)
+    vin=vinA||[-0.33,1];
+    if(mode==='AV'){const ex=(lon-TPE[0])*CLAT,ey=lat-TPE[1],r=Math.hypot(ex,ey)||1e-4;const g=2.2*Math.exp(-Math.pow(r/0.22,2))*Math.min(1,r/0.05);vin=nz([vin[0]+(-ey/r)*g,vin[1]+(-ex/r)*g])}}
+  else{ // north → south with eddies; the south end splits east and west out to sea
+    let v=[-0.33,1];
+    const split=sstep(22.85,22.25,lat);v[0]+=Math.sign(lon-120.8)*1.4*split;v[1]*=1-0.6*split;
+    for(const[elo,ela,er,spin]of EDDIES){const ex=(lon-elo)*CLAT,ey=lat-ela,r=Math.hypot(ex,ey)||1e-3;const g=1.7*Math.exp(-Math.pow(r/er,2))*Math.min(1,r/(er*0.25));v[0]+=(-ey/r)*g*spin;v[1]+=(-ex/r)*g*spin}
+    vin=nz(v)}
+  // ---- outside: the seas around Taiwan (no big eddies)
+  const lonc=120.95+(lat-23.6)*0.32;
+  const kN=sstep(24.6,25.6,lat);const east=nz([lerp(0.25,0.8,kN),lerp(-0.97,-0.6,kN)]);              // Kuroshio up the east coast, NE past the north tip
+  const N=Math.atan2(-1,0.18),Sd=Math.atan2(1,-0.12),Wd=Math.atan2(0.25,-1);
+  let wa;
+  if(strait==='south'){ // the whole strait runs south in winter; the branch pushes north a little south of Penghu, then bends west-southwest
+    const k=sstep(22.6,23.3,lat);wa=k<0.5?angLerp(N,Wd,k*2):angLerp(Wd,Sd,(k-0.5)*2)}
+  else if(strait==='side'){ // side by side: China side south, Taiwan side north
+    const k=T.wide?sstep(118.9,120.8,lon):sstep(119.3,120.4,lon);wa=lerp(Sd,N+Math.PI*2,k)}   // turn through west, so the seam is a thin gap, not a packed line
+  else{ // meet near 雲彰隆起 and both turn west, in a wide bend
+    const k=sstep(23.2,24.5,lat);wa=k<0.5?angLerp(N,Wd,k*2):angLerp(Wd,Sd,(k-0.5)*2)}
+  const west=[Math.cos(wa),Math.sin(wa)];
+  const we=sstep(lonc-0.45,lonc+0.45,lon);let vout=nz([lerp(west[0],east[0],we),lerp(west[1],east[1],we)]);
+  const ks=T.wide?sstep(21.2,22.7,lat):sstep(21.6,22.3,lat);vout=nz([lerp(0.12,vout[0],ks),lerp(-1,vout[1],ks)]);               // south: the Kuroshio comes up from Luzon
+  const kn=(T.wide?sstep(24.7,25.9,lat):sstep(25.0,25.5,lat))*(1-sstep(121.55,121.95,lon));vout=nz([lerp(vout[0],-0.35,kn),lerp(vout[1],1,kn)]);  // north: winter coastal water comes down the China side into the strait
+  // ---- blend across the coast (no hard edge)
+  const bl=sstep(-0.12,0.14,dd);
+  const v=nz([lerp(vin[0],vout[0],bl),lerp(vin[1],vout[1],bl)]);
+  let dens=dd<=0?1:lerp(1,0.07,sstep(0,0.3,dd));
+  let vv=v;
+  for(const P of ISLES){const m=0.45*G;if(x<P.x0-m||x>P.x1+m||y<P.y0-m||y>P.y1+m)continue;const sp=sdPoly(P,x,y);const di=sp.d,R=Math.max(P.R,0.015);if(di>0.35)continue;
+    dens=Math.max(dens,di<=0?1:lerp(1,0.07,sstep(0,0.04+R*0.5,di)));
+    if(mode2==='loop'){const w=1-sstep(-0.002,0.03+R*0.5,di);vv=nz([lerp(vv[0],sp.tx,w),lerp(vv[1],sp.ty,w)])}
+    else if(mode2==='wake'){const ex=x-P.cx,ey=y-P.cy,r=Math.hypot(ex,ey)||1,nx=ex/r,ny=ey/r;const vn=vv[0]*nx+vv[1]*ny;const w=di<=0?1:Math.exp(-Math.pow(di/(0.8*R+0.02),2));if(vn<0||di<=0)vv=nz([vv[0]-vn*nx*w,vv[1]-vn*ny*w]);
+      const al=(ex*vv[0]+ey*vv[1])/G,la=(ex*vv[1]-ey*vv[0])/G;
+      if(al>0&&di>0){const wig=0.7*Math.sin(al/(R*1.3)*Math.PI)*Math.exp(-Math.pow(la/(1.3*R),2))*Math.exp(-al/(6*R));const c=Math.cos(wig),s2=Math.sin(wig);vv=[vv[0]*c-vv[1]*s2,vv[0]*s2+vv[1]*c]}}}
+  return[vv[0],vv[1],dens]}
+const GB={lo0:114.5,lo1:127.5,la0:17.5,la1:29.5,step:0.03};
+const GX=Math.round((GB.lo1-GB.lo0)/GB.step)+1,GY=Math.round((GB.la1-GB.la0)/GB.step)+1;
+let GVX,GVY,GD,GDV;const GRIDS={};
+function softDist(x,y){let acc=0,wl=0;for(let i=0,j=TW.length-1;i<TW.length;j=i++){const[xi,yi]=TW[i],[xj,yj]=TW[j];const ex=xi-xj,ey=yi-yj,L2=ex*ex+ey*ey,L=Math.sqrt(L2);
+  let u=((x-xj)*ex+(y-yj)*ey)/L2;u=clamp(u,0,1);const px=xj+ex*u-x,py=yj+ey*u-y;const d=Math.sqrt(px*px+py*py)/G+0.004;acc+=L*Math.pow(d,-4);wl+=L}return Math.pow(acc/wl,-0.25)}
+function useGrid(){const key=[T.island,T.strait,T.isle,T.isleS,T.proj,T.wide].join('|');if(!GRIDS[key]){const n=GX*GY,vx=new Float32Array(n),vy=new Float32Array(n),gd=new Float32Array(n),dv=new Float32Array(n);
+    const IN=(lon,lat)=>lon>119.8&&lon<122.2&&lat>21.7&&lat<25.5;
+    let SD=null;if(T.island!=='C'){SD=new Float32Array(n);for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;if(!IN(lon,lat))continue;const[x,y]=geo(lon,lat);let v=softDist(x,y);
+      if(T.island==='AT')v*=Math.exp(-Math.hypot((lon-TPE[0])*CLAT,lat-TPE[1])/1.1);   // the loop's centre slides to Taipei
+      SD[j*GX+i]=v}}
+    for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;const k=j*GX+i;
+      if(lon<117||lon>125||lat<19.5||lat>27.5){vx[k]=0.12;vy[k]=-1;gd[k]=0.07;continue}
+      let vinA=null;if(SD&&IN(lon,lat)&&i>0&&j>0&&i<GX-1&&j<GY-1){const gx=(SD[k+1]-SD[k-1])/CLAT,gy=(SD[k+GX]-SD[k-GX]);const L=Math.hypot(gx,gy);if(L>1e-9)vinA=[-gy/L,gx/L]}
+      const[x,y]=geo(lon,lat);const f=geoField(x,y,T.island,T.strait,vinA,T.isle);vx[k]=f[0];vy[k]=f[1];gd[k]=f[2]}
+    if(T.proj){ // remove convergence: Helmholtz projection on the area around Taiwan (Jacobi), so no current can pile lines into a seam
+      const i0=Math.round((117-GB.lo0)/GB.step),i1=Math.round((125-GB.lo0)/GB.step),j0=Math.round((GB.la1-27.5)/GB.step),j1=Math.round((GB.la1-19.5)/GB.step);
+      const dx=CLAT,ax=1/(dx*dx),den=2*ax+2;const P=new Float32Array(n),P2=new Float32Array(n),DIV=new Float32Array(n);
+      for(let j=j0+1;j<j1;j++)for(let i=i0+1;i<i1;i++){const k=j*GX+i;DIV[k]=(vx[k+1]-vx[k-1])/(2*dx)+(vy[k+GX]-vy[k-GX])/2}
+      let a=P,b=P2;for(let it=0;it<320;it++){for(let j=j0+1;j<j1;j++)for(let i=i0+1;i<i1;i++){const k=j*GX+i;b[k]=((a[k+1]+a[k-1])*ax+(a[k+GX]+a[k-GX])-DIV[k])/den}
+        for(let j=j0;j<=j1;j++){b[j*GX+i0]=b[j*GX+i0+1];b[j*GX+i1]=b[j*GX+i1-1]}for(let i=i0;i<=i1;i++){b[j0*GX+i]=b[(j0+1)*GX+i];b[j1*GX+i]=b[(j1-1)*GX+i]}const tmp=a;a=b;b=tmp}
+      for(let j=j0+1;j<j1;j++)for(let i=i0+1;i<i1;i++){const k=j*GX+i;vx[k]-=(a[k+1]-a[k-1])/(2*dx);vy[k]-=(a[k+GX]-a[k-GX])/2}}
+    for(let j=1;j<GY-1;j++)for(let i=1;i<GX-1;i++){const k=j*GX+i;dv[k]=((vx[k+1]-vx[k-1])/CLAT+(vy[k+GX]-vy[k-GX]))/(2*GB.step)}   // <0 where currents converge
+    GRIDS[key]=[vx,vy,gd,dv]}
+  [GVX,GVY,GD,GDV]=GRIDS[key]}
+function gdiv(x,y){const[lon,lat]=ungeo(x,y);const i=Math.round((lon-GB.lo0)/GB.step),j=Math.round((GB.la1-lat)/GB.step);if(i<1||j<1||i>=GX-1||j>=GY-1)return 0;return GDV[j*GX+i]}
+useGrid();
+function gsample(x,y){const[lon,lat]=ungeo(x,y);const fi=(lon-GB.lo0)/GB.step,fj=(GB.la1-lat)/GB.step;
+  if(fi<0||fj<0||fi>=GX-1||fj>=GY-1)return[0.12,-1,0.07];
+  const i=fi|0,j=fj|0,u=fi-i,v=fj-j,k=j*GX+i;
+  const a=(1-u)*(1-v),b=u*(1-v),c=(1-u)*v,d=u*v;
+  return[GVX[k]*a+GVX[k+1]*b+GVX[k+GX]*c+GVX[k+GX+1]*d,GVY[k]*a+GVY[k+1]*b+GVY[k+GX]*c+GVY[k+GX+1]*d,GD[k]*a+GD[k+1]*b+GD[k+GX]*c+GD[k+GX+1]*d]}
+const dens=(x,y)=>gsample(x,y)[2];
+const gmag=(x,y)=>{if(!T.proj)return 1;const g=gsample(x,y);return clamp(Math.hypot(g[0],g[1]),0.35,1.8)};
+
+// ---------- flow field ----------
+function amp(){return Math.max(0.28,(1-0.85*S.pS)*(1-S.e))}   // small meanders stay, even in the epilogue
+function fieldAngle(x,y,t){const g=gsample(x,y);
+  // two noise layers fixed to the map: a fine one that matters up close (fades as the camera pulls back so it never turns into jitter),
+  // and a coarse one at island scale that keeps gentle meanders in the epilogue
+  const fine=amp()*sstep(0.06,0.45,zf()),X=x,Y=y;
+  const cx=x*0.000055,cy=y*0.000055;
+  return Math.atan2(g[1],g[0])+fine*(1.1*Math.sin(X*0.0036+t*0.10)+0.8*Math.cos(Y*0.0046-t*0.07)+0.45*Math.sin((X+Y)*0.0021+t*0.05))
+    +0.22*(Math.sin(cx*1.7+t*0.03)+0.7*Math.cos(cy*1.3-t*0.025)+0.5*Math.sin((cx-cy)*0.9+t*0.02))}
+function vel(x,y,t){const a=fieldAngle(x,y,t),f=1,vs=(1-S.pS)*(1-S.e);let vx=Math.cos(a),vy=Math.sin(a);
+  if(vs>0.01)for(const v of S.vort){const dx=(x-v.x)*f,dy=(y-v.y)*f,d2=dx*dx+dy*dy,d=Math.sqrt(d2)+1e-3;const g=v.str*vs*Math.exp(-d2/(v.rad*v.rad));vx+=(-dy/d)*g*v.s;vy+=(dx/d)*g*v.s}
+  const L=Math.hypot(vx,vy)||1;return[vx/L,vy/L]}
+function flowSpeed(){return (S.phase==='handoff'||S.phase==='epilogue'?1.35:1)}
+
+// ---------- pools (spawn weighted by density: the island is where the lines are thickest) ----------
+function rndIn(hw,hh,m){return[S.camx+(Math.random()*2-1)*hw*m,S.camy+(Math.random()*2-1)*hh*m]}
+function rndDense(hw,hh,m){let p;for(let k=0;k<24;k++){p=rndIn(hw,hh,m);if(Math.random()<dens(p[0],p[1]))return p}return p}
+function newLine(hw,hh,any){const[x,y]=rndDense(hw,hh,1.1);const o=Math.random()<0.8;return{x,y,h:[x,y],age:any?Math.random()*300:0,life:300+Math.random()*400,sp:0.7+Math.random()*0.6,col:o?1+(Math.random()*3|0):0,sh:Math.random(),dn:dens(x,y)}}
+function newPart(hw,hh,any){const[x,y]=rndDense(hw,hh,1.15);return{x,y,age:any?Math.random()*200:0,life:140+Math.random()*160,s:0.6+Math.random()*2.6,c:Math.random()<.3?1:0,col:Math.random()<0.8?1+(Math.random()*3|0):0}}
+function newVort(hw,hh){const[x,y]=rndIn(hw,hh,1.2);return{x,y,s:Math.random()<.5?1:-1,str:2.5+Math.random()*3,rad:50+Math.random()*90}}
+function buildPools(){const{hw,hh}=view();
+  parts=[];const pc=Math.round(520*Math.min(1.4,K)*0.45);for(let i=0;i<pc;i++)parts.push(newPart(hw,hh,true));
+  S.vort=[];for(let i=0;i<5;i++)S.vort.push(newVort(hw,hh));
+  BASE=Math.round(3800*Math.min(1.7,K*K*1.5+0.1));
+  fl=[];const pool=Math.round(BASE*1.3);for(let i=0;i<pool;i++)fl.push(newLine(hw,hh,true));
+  for(let k=0;k<126;k++)for(const q of fl){const[vx,vy]=vel(q.x,q.y,S.t);q.x+=vx*80*q.sp/60/zf();q.y+=vy*80*q.sp/60/zf();if(k%3===0){q.h.push(q.x,q.y);if(q.h.length>84)q.h.splice(0,2)}}
+}
+function activeLines(){return Math.min(fl.length,Math.round(BASE*(0.55+0.75*Math.max(prog(),S.e))*lineScale))}
+// final framing: the whole island fills a little over half the screen
+function epilogueEZ(){const f=T.tws==='75'?0.75:T.tws==='90'?0.9:(H>=W?0.75:0.9);const zt=Math.min(f*H/TWC.h,0.95*W/TWC.w);return zt/(0.5*S.zoom)}
+
+// ---------- others ----------
+function spawnOther(amb,at){const{hw,hh}=view();
+  const[fx,fy]=vel(S.camx,S.camy,S.t);const up=Math.atan2(-fy,-fx);
+  for(let k=0;k<6;k++){const a=Math.random()<0.7?up+(Math.random()*2-1)*1.0:Math.random()*Math.PI*2;
+    const ca=Math.cos(a),sa=Math.sin(a);const r=Math.min(hw/Math.max(1e-3,Math.abs(ca)),hh/Math.max(1e-3,Math.abs(sa)))*(amb?1.04:1.12);
+    let x=S.camx+ca*r,y=S.camy+sa*r;if(at){x=at[0];y=at[1]}else if(Math.random()>dens(x,y)+0.15)continue;
+    let text=nextLine(),mine=false;
+    if(!amb&&S.myDrop&&!S.mySpawned&&prog()>=0.5){text=S.myDrop.text;S.mySpawned=true;mine=true}
+    const d={x,y,vx:0,vy:0,r0:9+Math.random()*4,text,mine,label:null,sd:Math.random()*10,pair:-1,amb:!!amb};S.others.push(d);return d}}
+function seedEp(){ // when the camera pulls back, there are droplets everywhere — about 70% on the island, 30% at sea
+  const zt=epilogueEZ()*0.5*S.zoom;const fw=W/2/zt*1.05,fh=H/2/zt*1.05;const{hw,hh}=view();const nIs=Math.round(T.epN*0.7);
+  for(let k=0,m=0;k<T.epN*30&&m<T.epN;k++){const onIs=m<nIs;const x=onIs?lerp(TWC.cx-TWC.w/2,TWC.cx+TWC.w/2,Math.random()):TWC.cx+(Math.random()*2-1)*fw,y=onIs?lerp(TWC.cy-TWC.h/2,TWC.cy+TWC.h/2,Math.random()):TWC.cy+(Math.random()*2-1)*fh;
+    const inside=sdTW(x,y).d<0;if(onIs!==inside)continue;
+    if(Math.abs(x-S.camx)<hw*1.1&&Math.abs(y-S.camy)<hh*1.1)continue;
+    const d=spawnOther(true,[x,y]);if(d){d.ep=true;d.onIs=inside;m++}}}
+function spawnGroup(){const d0=spawnOther(true);if(!d0)return;const z=Z();const n=3+(Math.random()*3|0);d0.amb=false;   // one of the group may come to you
+  for(let k=1;k<n;k++){const a=Math.random()*Math.PI*2,r=(20+Math.random()*45)/z;spawnOther(true,[d0.x+Math.cos(a)*r,d0.y+Math.sin(a)*r])}}
+const oR=d=>Math.max(d.r0/S.zoom,2.2/Z());   // others keep their on-screen size as the camera pulls back
+
+// ---------- labels (lines near droplets) ----------
+function wantLabel(d){if(d.label||S.inviteOn)return;if(S.peeks)for(const p of S.peeks)if(p.d===d)p.gone=true,p.a=Math.min(p.a,0.01);const vis=S.labels.filter(l=>l.state!=='done');
+  if(T.over==='queue'&&vis.length)return;
+  if(T.over==='spread'&&vis.length>=3)return;
+  if(T.over==='replace')for(const l of vis)l.fast=true;
+  const L={d,text:d.text,a:0,state:'near',hold:0,fast:false,born:S.t};d.label=L;S.labels.push(L)}
+function labelToWord(L){const z=Z();const j=130/z;S.words.push({x:L.wx+(Math.random()*2-1)*j,y:L.wy+(Math.random()*2-1)*j*0.6,text:L.text,size:13/z,age:0});if(S.words.length>70)S.words.shift()}
+
+// ---------- audio ----------
+const A={ctx:null};
+function audioStart(){try{const C=new (window.AudioContext||window.webkitAudioContext)();A.ctx=C;
+  const master=C.createGain();master.gain.value=0.9;master.connect(C.destination);A.master=master;
+  const verb=C.createConvolver();const len=C.sampleRate*2.6,ir=C.createBuffer(2,len,C.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
+  verb.buffer=ir;const vg=C.createGain();vg.gain.value=0.35;verb.connect(vg);vg.connect(master);A.verb=verb;
+  // water: slow waves, about one swell every nine seconds
+  const nb=C.createBuffer(2,C.sampleRate*5,C.sampleRate);for(let ch=0;ch<2;ch++){const d=nb.getChannelData(ch);let p0=0,p1=0,p2=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;p0=0.99765*p0+w*0.099;p1=0.963*p1+w*0.2965;p2=0.57*p2+w*1.0526;d[i]=(p0+p1+p2+w*0.1848)*0.18}}
+  const ns=C.createBufferSource();ns.buffer=nb;ns.loop=true;const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=500;const sw=C.createGain();sw.gain.value=0.15;
+  const wg=C.createGain();wg.gain.value=0;ns.connect(lp);lp.connect(sw);sw.connect(wg);wg.connect(master);ns.start();wg.gain.linearRampToValueAtTime(0.5,C.currentTime+3);A.water=wg;
+  const swell=()=>{const tt=C.currentTime,u=3.5+Math.random(),dn=4.5+Math.random();sw.gain.cancelScheduledValues(tt);sw.gain.setValueAtTime(sw.gain.value,tt);sw.gain.linearRampToValueAtTime(0.75,tt+u);sw.gain.linearRampToValueAtTime(0.12,tt+u+dn);
+    lp.frequency.cancelScheduledValues(tt);lp.frequency.setValueAtTime(lp.frequency.value,tt);lp.frequency.linearRampToValueAtTime(1300,tt+u);lp.frequency.linearRampToValueAtTime(380,tt+u+dn);setTimeout(swell,(u+dn)*1000)};swell();
+  // music layers: drone, pad, shimmer (ramped by progress)
+  const pf=C.createBiquadFilter();pf.type='lowpass';pf.frequency.value=700;pf.connect(master);pf.connect(verb);A.pf=pf;
+  const mk=(freqs,type,g)=>{const gn=C.createGain();gn.gain.value=0;gn.connect(pf);for(const f of freqs){for(const dt of[-3,3]){const o=C.createOscillator();o.type=type;o.frequency.value=f;o.detune.value=dt;const og=C.createGain();og.gain.value=g;o.connect(og);og.connect(gn);o.start()}}return gn};
+  A.layers=[mk([65.41,98.0],'sine',0.12),mk([130.81,196.0,261.63],'triangle',0.035),mk([329.63,392.0,523.25],'sine',0.018),mk([587.33,783.99,1046.5],'sine',0.01)];
+  A.arpT=0;
+}catch(e){A.ctx=null}}
+const PENTA=[523.25,587.33,659.25,783.99,880,1046.5,1174.66,1318.5];
+const NOTE=n=>{const m=/^([A-G])(#|b)?(\d)$/.exec(n||'');if(!m)return 0;const base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0);return 440*Math.pow(2,(base+12*(+m[3]+1)-69)/12)};
+function bell(f,t,g){const C=A.ctx;for(const [m,gg] of [[1,0.07],[2.01,0.02]]){const o=C.createOscillator();o.type='sine';o.frequency.value=f*m;const e=C.createGain();e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(gg*g,t+0.01);e.gain.exponentialRampToValueAtTime(0.0001,t+2.2);o.connect(e);e.connect(A.master);e.connect(A.verb);o.start(t);o.stop(t+2.3)}}
+let melIdx=0;
+function chime(i){const C=A.ctx;if(!C)return;const t=C.currentTime;
+  if(!MELODY.length){bell(PENTA[Math.random()*PENTA.length|0],t,1);return}
+  const beat=60/BPM;
+  if(T.mel==='bar'){const nb=BARS.length;let bi=i<=nb?i-1:(i<=total()?nb-4+((i-nb-1)%4):(i-1)%nb);   // 17–20 replay the last phrase
+    let tt=t;for(const[n,b] of BARS[bi]){bell(NOTE(n)*2,tt,1);tt+=b*beat};return}
+  bell(NOTE(MELODY[melIdx%MELODY.length][0])*2,t,1);melIdx++}
+function finishMelody(){const C=A.ctx;if(!C||T.mel!=='finish'||!MELODY.length||melIdx>=MELODY.length)return;const beat=60/BPM;let tt=C.currentTime+0.6;
+  for(let k=melIdx;k<MELODY.length;k++){const[n,b]=MELODY[k];bell(NOTE(n)*2,tt,0.85);tt+=b*beat}melIdx=MELODY.length}
+function audioTick(dt){const C=A.ctx;if(!C)return;const p=prog(),e=S.e,t=C.currentTime;
+  const lv=[clamp(p*4,0,1),clamp((p-0.25)*3,0,1),clamp((p-0.55)*3,0,1),e];
+  A.layers.forEach((g,i)=>g.gain.setTargetAtTime(lv[i]*(i===3?1:0.9)+(e*0.3*(i<3?1:0)),t,1.2));
+  A.pf.frequency.setTargetAtTime(700+p*700+e*2200,t,1.5);
+  if(p>0.4||e>0){A.arpT-=dt;if(A.arpT<=0){A.arpT=e>0?0.42:0.9;const o=C.createOscillator();o.type='sine';o.frequency.value=PENTA[(Math.random()*5|0)+(e>0?3:0)]/2;
+    const g=C.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.012+e*0.012,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);o.connect(g);g.connect(A.pf);o.start(t);o.stop(t+1.7)}}
+}
+
+// ---------- input ----------
+let lastMove={x:0,y:0};
+const toWorld=(sx,sy)=>{const z=Z();return[S.camx+(sx-W/2)/z,S.camy+(sy-H/2)/z]};
+const pinch={on:false,d0:0,u0:1};const touches=new Map();
+cv.addEventListener('pointerdown',e=>{if(S.phase==='title')return;cv.setPointerCapture?.(e.pointerId);touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(touches.size===2&&zoomOK()){const[a,b]=[...touches.values()];pinch.on=true;pinch.d0=Math.hypot(a.x-b.x,a.y-b.y);pinch.u0=S.uz;S.pointer=null;return}
+  if(e.pointerType!=='mouse'){S.pressed=true;S.pointer={x:e.clientX,y:e.clientY};S.lastInput=S.t}
+  inviteHit(e.clientX,e.clientY,true);ownHit(e.clientX,e.clientY)});
+cv.addEventListener('pointermove',e=>{if(touches.has(e.pointerId))touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch.on&&touches.size>=2){const[a,b]=[...touches.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);S.uz=clamp(pinch.u0*d/pinch.d0,0.6,Math.max(2.5,1/(S.ezT||1)));return}
+  if(e.pointerType==='mouse'){const b=inviteBox;S.invHover=!!(S.inviteOn&&b&&e.clientX>b.x0&&e.clientX<b.x1&&e.clientY>b.y0&&e.clientY<b.y1);cv.style.cursor=S.invHover?'pointer':'';S.mouseIn=true;const moved=Math.hypot(e.clientX-lastMove.x,e.clientY-lastMove.y)>1.5;lastMove={x:e.clientX,y:e.clientY};S.pointer={x:e.clientX,y:e.clientY};if(moved)S.lastInput=S.t}
+  else if(S.pressed){S.pointer={x:e.clientX,y:e.clientY};S.lastInput=S.t}
+});
+const up=e=>{touches.delete(e.pointerId);if(touches.size<2)pinch.on=false;if(e.pointerType!=='mouse'&&touches.size===0){S.pressed=false;S.pointer=null}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){S.mouseIn=false;S.pointer=null}});
+document.addEventListener('mouseleave',()=>{S.mouseIn=false;S.pointer=null});
+addEventListener('wheel',e=>{if(!zoomOK())return;e.preventDefault();S.uz=clamp(S.uz*Math.exp(-e.deltaY*0.0012),0.6,Math.max(2.5,1/(S.ezT||1)))},{passive:false});
+const KEYMAP={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]};
+addEventListener('keydown',e=>{if(!compose.hidden)return;if(KEYMAP[e.key]){S.keys[e.key]=1;e.preventDefault()}});
+addEventListener('keyup',e=>{delete S.keys[e.key]});
+addEventListener('blur',()=>{S.keys={};S.pressed=false;S.pointer=null});
+function zoomOK(){return S.phase==='free'&&S.epT>(T.end!=='none'?33.5:19)}
+function keyDir(){let x=0,y=0;for(const k in S.keys){const v=KEYMAP[k];if(v){x+=v[0];y+=v[1]}}const L=Math.hypot(x,y);return L?[x/L,y/L]:null}
+function mouseLive(){return S.mouseIn&&S.t-S.lastInput<1}   // desktop: a still mouse means you have stopped
+function steering(){return !!keyDir()||(S.pointer&&(S.pressed||mouseLive()))}
+function stopped(){return S.t-S.lastInput>1&&!steering()}   // resting = not steering (you still drift with the current)
+
+// ---------- start ----------
+const startEl=document.getElementById('start');
+function begin(){if(S.phase!=='title')return;S.phase='play';startEl.classList.add('gone');audioStart();S.lastInput=S.t;
+  try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m&&m.text)S.myDrop=m}catch(e){}}
+startEl.addEventListener('click',begin);startEl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')begin()});
+
+// ---------- invitation & composer ----------
+const compose=document.getElementById('compose');
+let inviteBox=null;
+function ownHit(x,y){if(!S.declined||S.submitted||!compose.hidden)return;const z=Z();const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2;if(Math.hypot(x-sx,y-sy)<Math.max(radius()*z,16)+12)openCompose()}
+function inviteHit(x,y,tap){if(!S.inviteOn||!inviteBox||S.submitted||!compose.hidden)return;const b=inviteBox;if(x>b.x0-8&&x<b.x1+8&&y>b.y0-10&&y<b.y1+10){S.invHover=false;cv.style.cursor='';openCompose()}}
+let pick=null;
+function showCompose(){compose.hidden=false;requestAnimationFrame(()=>requestAnimationFrame(()=>compose.classList.add('show')))}
+function hideCompose(){compose.classList.remove('show');setTimeout(()=>{if(!compose.classList.contains('show'))compose.hidden=true},650)}
+function openCompose(){showCompose();S.inviteOn=false;
+  document.getElementById('cTitle').textContent=COMPOSE.title||COMPOSE.invite;
+  const pr=document.getElementById('cPresets');pr.innerHTML='';
+  for(const s of COMPOSE.presets){const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('aria-pressed','false');b.onclick=()=>{pick={kind:'preset',text:s};sync()};pr.append(b)}
+  const bl=COMPOSE.blank;document.getElementById('cBefore').textContent=bl.before;document.getElementById('cAfter').textContent=bl.after;
+  const inp=document.getElementById('cInput');inp.value='';inp.maxLength=bl.maxLen||8;
+  const ws=document.getElementById('cWords');ws.innerHTML='';
+  for(const w of bl.words){const b=document.createElement('button');b.type='button';b.textContent=w;b.setAttribute('aria-pressed','false');b.onclick=()=>{inp.value=w;pick={kind:'blank',text:w};sync()};ws.append(b)}
+  inp.oninput=()=>{pick=inp.value.trim()?{kind:'blank',text:inp.value.trim()}:null;sync()};
+  pick=null;sync();setTimeout(()=>pr.querySelector('button')?.focus({preventScroll:true}),350)}
+function sync(){document.querySelectorAll('#cPresets button').forEach(b=>b.setAttribute('aria-pressed',String(pick&&pick.kind==='preset'&&b.textContent===pick.text)));
+  document.querySelectorAll('#cWords button').forEach(b=>b.setAttribute('aria-pressed',String(pick&&pick.kind==='blank'&&b.textContent===pick.text)));
+  if(pick&&pick.kind==='preset')document.getElementById('cInput').value='';
+  document.getElementById('cGo').disabled=!pick;document.getElementById('cErr').textContent=''}
+function blocked(s){const low=s.toLowerCase().replace(/\s+/g,'');for(const w of FILTER.words||[])if(w&&low.includes(String(w).toLowerCase()))return true;
+  for(const p of FILTER.patterns||[]){try{if(new RegExp(p,'i').test(s))return true}catch(e){}}return false}
+document.getElementById('cNo').onclick=()=>{hideCompose();if(!S.declined){S.hintT=0}S.declined=true};
+document.getElementById('cGo').onclick=()=>{if(!pick)return;let text;
+  if(pick.kind==='preset')text=pick.text;else{const w=pick.text.slice(0,COMPOSE.blank.maxLen||8);
+    if(blocked(w)){document.getElementById('cErr').textContent='這句話沒辦法放進洋流，換個說法試試。';return}
+    text=COMPOSE.blank.before+w+COMPOSE.blank.after}
+  const rec={text,date:new Date().toISOString().slice(0,10),pending:true};
+  try{localStorage.setItem('hl-mydrop',JSON.stringify(rec))}catch(e){}
+  pushLine(text);
+  hideCompose();S.submitted=true;
+  // your drop leaves you and drifts off with your line
+  const z=Z();const d={x:S.px,y:S.py,vx:0,vy:0,r0:11,text,mine:true,label:null,leaving:4,sd:0};S.others.push(d);
+  const L={d,text,a:0,state:'near',hold:0,fast:false,leaving:true};d.label=L;S.labels.push(L)};
+
+// ---------- #test ----------
+const tp=document.getElementById('test');
+const TSEL=[['tFont','font'],['tLen','len'],['tEnd','end'],['tOver','over'],['tIsland','island'],['tStrait','strait'],['tTws','tws'],['tDrift','drift'],['tMel','mel'],['tIsle','isle'],['tBound','bound'],['tInv','inv'],['tEpN','epN'],['tIsleS','isleS'],['tCam','cam']];
+function testSync(){tp.hidden=location.hash!=='#test';
+  for(const[id,k]of TSEL)document.getElementById(id).value=String(T[k])}
+addEventListener('hashchange',testSync);testSync();
+for(const[id,k]of TSEL)document.getElementById(id).addEventListener('change',e=>{T[k]=(k==='len'||k==='drift'||k==='epN'||k==='isleS')?+e.target.value:e.target.value;if(k==='island'||k==='strait'||k==='isle'||k==='isleS'){if(k==='isleS')buildIsles();isleLines=[];useGrid();for(const q of fl)q.dn=dens(q.x,q.y)}try{localStorage.setItem('hl-test6',JSON.stringify(T))}catch(_){}if(k==='font')applyFont()});
+for(const k of['pWait','pMax','pSlow','pPair','endHalo','endDim','proj','jit','wide','isleLines','isleDark']){const el=document.getElementById(k);el.checked=!!T[k];el.addEventListener('change',()=>{T[k]=el.checked;if(k==='proj'||k==='wide'){useGrid();for(const q of fl)q.dn=dens(q.x,q.y)}try{localStorage.setItem('hl-test6',JSON.stringify(T))}catch(_){}})}
+document.getElementById('tSkip').onclick=()=>{if(S.phase==='title')begin();if(S.n<total())S.n=total()};
+document.getElementById('tClear').onclick=()=>{try{localStorage.removeItem('hl-mydrop')}catch(e){}S.myDrop=null;document.getElementById('tInfo').textContent='已清除'};
+
+// ---------- text drawing (為 falls back to Klee One under 霞鶩文楷, which draws 爲) ----------
+function fillText(c,s,x,y,size,weight){const fam=FONTS[T.font];
+  if(T.font!=='wenkai'||s.indexOf('為')<0){c.font=`${weight||400} ${size}px ${fam}`;c.fillText(s,x,y);return c.measureText(s).width}
+  const parts=s.split(/(為)/);let w=0;const al=c.textAlign;c.textAlign='left';
+  const widths=parts.map(p=>{c.font=`${weight||400} ${size}px ${p==='為'?"'Klee One',serif":fam}`;return c.measureText(p).width});const tot=widths.reduce((a,b)=>a+b,0);
+  let sx=al==='center'?x-tot/2:x;parts.forEach((p,i)=>{c.font=`${weight||400} ${size}px ${p==='為'?"'Klee One',serif":fam}`;c.fillText(p,sx,y);sx+=widths[i]});c.textAlign=al;return tot}
+function measure(c,s,size){c.font=`400 ${size}px ${FONTS[T.font]}`;return c.measureText(s).width}
+
+// ---------- step ----------
+function step(dt){
+  S.t+=dt;const t=S.t;const sc=1/zf();
+  const playing=S.phase!=='title';S.pS+=(prog()-S.pS)*Math.min(1,dt*0.12);
+  // player: always drifts with the current, even when resting
+  const R=radius();const kd=keyDir();
+  const[fvx,fvy]=vel(S.px,S.py,t);const drift=(S.phase==='handoff'||S.phase==='epilogue'?60:22*T.drift)*sc*gmag(S.px,S.py);
+  let tvx=fvx*drift,tvy=fvy*drift;
+  if(playing&&S.phase!=='epilogue'){
+    const ctrl=S.phase==='handoff'?0.35:1;
+    if(kd){tvx+=kd[0]*130*sc*ctrl;tvy+=kd[1]*130*sc*ctrl;S.lastInput=t}
+    else if(S.pointer&&(S.pressed||mouseLive())){const[wx,wy]=toWorld(S.pointer.x,S.pointer.y);const dx=wx-S.px,dy=wy-S.py,d=Math.hypot(dx,dy);
+      if(d*Z()>4){const sp=Math.min(d*2.2,150*sc);tvx=lerp(tvx,dx/d*sp,ctrl);tvy=lerp(tvy,dy/d*sp,ctrl)}}
+  }
+  // soft boundary: far from Taiwan, the sea slowly carries you back
+  S.edge=0;if(playing&&S.phase!=='epilogue'){const sd0=sdTW(S.px,S.py).d/G;const{hw:bw,hh:bh}=view();
+    const maxD=T.bound==='mid'?1.15:T.bound==='view'?Math.min(bw,bh)/G*0.85:0.75;
+    S.edge=sstep(0.6*maxD,maxD,sd0);
+    const push=sstep(0.85*maxD,1.15*maxD,sd0);
+    if(push>0){const e=0.002*G,gx=(sdTW(S.px+e,S.py).d-sdTW(S.px-e,S.py).d),gy=(sdTW(S.px,S.py+e).d-sdTW(S.px,S.py-e).d),L=Math.hypot(gx,gy)||1;tvx+=-gx/L*push*220*sc;tvy+=-gy/L*push*220*sc}}
+  S.pvx+=(tvx-S.pvx)*Math.min(1,dt*3);S.pvy+=(tvy-S.pvy)*Math.min(1,dt*3);
+  S.px+=S.pvx*dt;S.py+=S.pvy*dt;
+  // camera
+  const tz=S.R0/R;S.zoom+=(tz-S.zoom)*Math.min(1,dt*0.25);
+  let cx=S.px,cy=S.py;
+  if(T.cam==='hold'&&(S.phase==='play'||S.phase==='handoff')){const rest=stopped()&&(S.stopT||0)>0.6;
+    if(rest&&t>(S.holdCool||0)){if(!S.hold)S.hold=[S.camx,S.camy];const z0=Z();const ox=(S.px-S.hold[0])*z0,oy=(S.py-S.hold[1])*z0;if(Math.abs(ox)>W*0.3||Math.abs(oy)>H*0.3){S.hold=null;S.holdCool=t+4}}else S.hold=null;
+    if(S.hold){cx=S.hold[0];cy=S.hold[1]}}
+  if(S.phase==='epilogue'||S.phase==='free')S.ezT=epilogueEZ();
+  if(S.phase==='epilogue'){const k=ease(S.e);S.ez=Math.exp(Math.log(S.ezT)*k);cx=lerp(S.px,TWC.cx,k);cy=lerp(S.py,TWC.cy,k)}
+  else if(S.phase==='free'){S.ez=S.ezT;if(steering()&&S.freeSteer==null)S.freeSteer=t;const k=S.freeSteer==null?1:Math.max(0,1-(t-S.freeSteer)/6);cx=lerp(S.px,TWC.cx,k);cy=lerp(S.py,TWC.cy,k)}
+  S.camx+=(cx-S.camx)*Math.min(1,dt*(S.phase==='epilogue'?6:2.5));S.camy+=(cy-S.camy)*Math.min(1,dt*(S.phase==='epilogue'?6:2.5));
+  const{hw,hh}=view();
+  const zNow=Z();if(S.lastZ){const ratio=zNow/S.lastZ;if(ratio<0.998){const p=1-ratio*ratio;for(const q of fl)if(Math.random()<p)Object.assign(q,newLine(hw,hh,false));for(const q of parts)if(Math.random()<p)Object.assign(q,newPart(hw,hh,false))}}S.lastZ=zNow;
+  // flow
+  const fs=flowSpeed();
+  for(const q of parts){const an=fieldAngle(q.x,q.y,t);q.x+=Math.cos(an)*38*sc*fs*dt;q.y+=Math.sin(an)*38*sc*fs*dt;q.age+=dt*60;
+    if(q.age>q.life||Math.abs(q.x-S.camx)>hw*1.25||Math.abs(q.y-S.camy)>hh*1.25)Object.assign(q,newPart(hw,hh,false))}
+  for(const v of S.vort){const an=fieldAngle(v.x,v.y,t);v.x+=Math.cos(an)*8*sc*dt;v.y+=Math.sin(an)*8*sc*dt;if(Math.abs(v.x-S.camx)>hw*1.5||Math.abs(v.y-S.camy)>hh*1.5)Object.assign(v,newVort(hw*0.85,hh*0.85))}
+  const fr=S.mergeClock++,rec=(fr%3)===0,N=activeLines();
+  for(let i=0;i<N;i++){const q=fl[i];const[vx,vy]=vel(q.x,q.y,t);const gm=(i+fr)%4===0?(q.gm=gmag(q.x,q.y)):(q.gm||1);q.x+=vx*80*q.sp*gm*sc*fs*dt;q.y+=vy*80*q.sp*gm*sc*fs*dt;q.age+=dt*60;
+    if(rec){q.h.push(q.x,q.y);if(q.h.length>84)q.h.splice(0,2)}
+    if((i+fr)%12===0){q.dn=dens(q.x,q.y);q.cv=Math.max(0,-gdiv(q.x,q.y))}
+    {const th=(q.dn==null||q.dn<0.6)?1.8:5;if(q.cv>th)q.age+=dt*60*Math.min(15,(q.cv-th)*1.6)}
+    if(q.age>q.life||Math.abs(q.x-S.camx)>hw*1.2||Math.abs(q.y-S.camy)>hh*1.2)Object.assign(q,newLine(hw,hh,false))}
+  if(T.isleLines){const z=Z();ISLES.forEach((P,pi)=>{const pool=isleLines[pi]||(isleLines[pi]=[]);
+      const vis=P.x1>S.camx-hw&&P.x0<S.camx+hw&&P.y1>S.camy-hh&&P.y0<S.camy+hh;const big=Math.max(P.x1-P.x0,P.y1-P.y0)*z>0.3*Math.min(W,H);const want=vis&&!big?Math.round(clamp((P.x1-P.x0)*(P.y1-P.y0)*z*z/55,14,140)*lineScale):0;   // only when the island is small on screen; up close the main current draws it
+      while(pool.length>want)pool.pop();
+      const spawn=()=>{let x,y,g=0;do{x=lerp(P.x0,P.x1,Math.random());y=lerp(P.y0,P.y1,Math.random());g++}while(sdPoly(P,x,y).d>0&&g<40);return{x,y,h:[x,y],age:0,life:120+Math.random()*200,sp:0.6+Math.random()*0.6,col:1+(Math.random()*3|0),sh:Math.random()}};
+      while(pool.length<want)pool.push(spawn());
+      const sp0=Math.min(40/z,(P.x1-P.x0)*0.08);
+      for(const q of pool){const p=sdPoly(P,q.x,q.y);const inw=p.d>-0.003?0.6:0;let vx=p.tx,vy=p.ty;   // run along the coast, lean inward near the edge
+        if(inw){const gx=(sdPoly(P,q.x+20,q.y).d-p.d),gy=(sdPoly(P,q.x,q.y+20).d-p.d),L=Math.hypot(gx,gy)||1;vx-=gx/L*inw;vy-=gy/L*inw}
+        const L=Math.hypot(vx,vy)||1;q.x+=vx/L*sp0*q.sp*dt;q.y+=vy/L*sp0*q.sp*dt;q.age+=dt*60;if(rec){q.h.push(q.x,q.y);if(q.h.length>50)q.h.splice(0,2)}
+        if(q.age>q.life||p.d>0.004)Object.assign(q,spawn())}})}
+  for(let i=S.words.length-1;i>=0;i--){const w=S.words[i];const an=fieldAngle(w.x,w.y,t);w.x+=Math.cos(an)*46*sc*dt;w.y+=Math.sin(an)*46*sc*dt;w.age+=dt}
+  if(!playing)return;
+  S.playT=(S.playT||0)+dt;
+  // others: few at first, more as time passes and as you gather
+  const st=stopped();S.stopT=st?(S.stopT||0)+dt:0;
+  const pp=S.phase==='play'||S.phase==='handoff'?prog():0.6;
+  const wantCome=Math.round(2.6+2.6*Math.pow(pp,1.2)),wantAmb=Math.round(1.5+17*Math.pow(pp,1.2));   // about 3–4 on screen at first, 20–25 near the end
+  const near=d=>d.pair<0&&Math.abs(d.x-S.camx)<hw*1.15&&Math.abs(d.y-S.camy)<hh*1.15;
+  const nCome=S.others.filter(d=>near(d)&&!d.amb).length,nAmb=S.others.filter(d=>near(d)&&d.amb).length;
+  if(nCome<wantCome&&Math.random()<dt*0.8)spawnOther(false);
+  if(nAmb<wantAmb&&Math.random()<dt*3)spawnOther(true);
+  if(S.phase==='free'){const nEp=S.others.filter(d=>d.ep&&Math.abs(d.x-S.camx)<hw*1.1&&Math.abs(d.y-S.camy)<hh*1.1).length;
+    for(let k=0;k<4&&nEp+k<T.epN;k++)if(Math.random()<dt*8){const d=spawnOther(true);if(d)d.ep=true}}
+  if(pp>0.5&&S.phase!=='epilogue'){S.groupT=(S.groupT==null?6:S.groupT)-dt;if(S.groupT<=0){spawnGroup();S.groupT=11+Math.random()*7}}
+  const z=Z();const canCome=st&&S.phase!=='epilogue'&&S.stopT>(T.pWait?2.5:0);const freeMode=S.phase==='free';
+  const reach=Math.max(hw,hh)*1.6;
+  let comers=S.others.filter(d=>d.leaving==null&&d.pair<0&&(freeMode||!d.amb)&&Math.hypot(d.x-S.px,d.y-S.py)<reach);
+  if(freeMode){comers.sort((a,b)=>Math.hypot(a.x-S.px,a.y-S.py)-Math.hypot(b.x-S.px,b.y-S.py));comers=comers.slice(0,3)}
+  if(T.pMax){comers.sort((a,b)=>Math.hypot(a.x-S.px,a.y-S.py)-Math.hypot(b.x-S.px,b.y-S.py));comers=comers.slice(0,2)}
+  const coming=new Set(canCome?comers:[]);
+  for(let i=S.others.length-1;i>=0;i--){const d=S.others[i];const[ox,oy]=vel(d.x,d.y,t);const dx=S.px-d.x,dy=S.py-d.y,dist=Math.hypot(dx,dy)||1;
+    const touch=R+oR(d)*0.7;
+    if(d.pair>=0){ // side by side for a moment, drifting together, then merge
+      d.pair+=dt;const gap=R+oR(d)*1.25;const ang=d.pa;const tx=S.px+Math.cos(ang)*gap,ty=S.py+Math.sin(ang)*gap;d.x+=(tx-d.x)*Math.min(1,dt*3);d.y+=(ty-d.y)*Math.min(1,dt*3);d.pa+=dt*0.15;
+      if(d.pair>2.5){S.others.splice(i,1);S.absorb.push({x:d.x,y:d.y,r0:d.r0,t:0,label:d.label});if(d.label){d.label.state='merged';d.label.hold=0}}continue}
+    const dm=(d.amb?1.7:1)*(T.cam==='follow'&&st?1.8:1)*gmag(d.x,d.y);let tx=ox*22*T.drift*dm*sc,ty=oy*22*T.drift*dm*sc;
+    if(T.jit){tx+=Math.cos(t*0.7+d.sd)*9*sc;ty+=Math.sin(t*0.9+d.sd*1.7)*9*sc}
+    if(d.ep&&S.epOn){if(!d.onIs){ // at sea: head straight for Taiwan (never held against the current)
+        const ax=TWC.cx-d.x,ay=TWC.cy-d.y,al=Math.hypot(ax,ay)||1;tx=ax/al*55*sc+tx*0.2;ty=ay/al*55*sc+ty*0.2;if((S.mergeClock+i)%20===0&&sdTW(d.x,d.y).d<0)d.onIs=true}
+      else{if((S.mergeClock+i)%6===0)d.cs=sdTW(d.x,d.y).d/G;const w=sstep(-0.08,0.0,d.cs||-1);   // on the island: wander gently with the loop, ease back in near the coast
+        const wa=d.sd*6+Math.sin(t*0.13+d.sd)*2.2;tx=tx*0.35+Math.cos(wa)*28*sc;ty=ty*0.35+Math.sin(wa)*28*sc;
+        if(w>0){const ax=TWC.cx-d.x,ay=TWC.cy-d.y,al=Math.hypot(ax,ay)||1;tx=lerp(tx,ax/al*40*sc,w);ty=lerp(ty,ay/al*40*sc,w)}
+        if((d.cs||0)>0.05)d.onIs=false}}
+    if(d.leaving!=null){d.leaving-=dt;tx=ox*70*sc;ty=oy*70*sc;if(d.leaving<-8){S.others.splice(i,1);continue}}
+    else if(coming.has(d)){const sp=clamp(dist*z/4,36,120)*(T.pSlow?0.55:1)*(1+0.6*clamp((prog()-0.5)/0.5,0,1))/z;tx+=dx/dist*sp;ty+=dy/dist*sp}
+    d.vx+=(tx-d.vx)*Math.min(1,dt*1.4);d.vy+=(ty-d.vy)*Math.min(1,dt*1.4);d.x+=d.vx*dt;d.y+=d.vy*dt;
+    const sd=dist*z;
+    if(d.leaving==null&&S.phase!=='epilogue'&&!(S.phase==='free'&&!zoomOK())&&sd<150&&(st||sd<70))wantLabel(d);
+    if(d.leaving==null&&dist<touch){
+      if(T.pPair){d.pair=0;d.pa=Math.atan2(-dy,-dx);if(!d.label&&S.phase!=='epilogue')wantLabel(d)}
+      else{S.others.splice(i,1);S.absorb.push({x:d.x,y:d.y,r0:d.r0,t:0,label:d.label});if(d.label){d.label.state='merged';d.label.hold=0}}
+      continue}
+    if(!(d.ep&&S.phase==='epilogue')&&(Math.abs(d.x-S.camx)>hw*1.8||Math.abs(d.y-S.camy)>hh*1.8)){if(d.label)d.label.state='lost';S.others.splice(i,1)}}
+  for(let i=S.absorb.length-1;i>=0;i--){const b=S.absorb[i];b.t+=dt/0.7;b.x+=(S.px-b.x)*Math.min(1,dt*3);b.y+=(S.py-b.y)*Math.min(1,dt*3);
+    if(b.t>=1){S.absorb.splice(i,1);S.n++;chime(S.n)}}
+  // labels
+  for(let i=S.labels.length-1;i>=0;i--){const L=S.labels[i];
+    if(L.state==='near'){L.a=Math.min(1,L.a+dt*2.2);if(L.leaving){L.hold+=dt;if(L.hold>4){L.state='merged';L.hold=0}}}
+    else if(L.state==='merged'){L.hold+=dt;L.a=Math.min(1,L.a+dt*2);if(L.hold>3||L.fast){L.state='fading'}}
+    else if(L.state==='lost'){L.a-=dt*1.5;if(L.a<=0){S.labels.splice(i,1);if(L.d)L.d.label=null}continue}
+    if(L.state==='fading'){L.a-=dt*(L.fast?2.5:1);if(L.a<=0){L.state='done';labelToWord(L);S.labels.splice(i,1)}}
+    if(L.fast&&L.state==='near'){L.a-=dt*2.5;if(L.a<=0){L.state='done';labelToWord(L);S.labels.splice(i,1);if(L.d)L.d.label=null}}}
+  // phases
+  if(S.phase==='play'&&S.n>=total()){S.phase='handoff';S.hand=0}
+  if(S.phase==='handoff'){S.hand+=dt;if(S.hand>1.5&&!steering()&&t-S.lastInput>0.8){S.phase='epilogue';S.epT=0;S.epOn=true;finishMelody();seedEp();S.ezT=epilogueEZ();for(const L of S.labels)if(L.state==='near')L.fast=true}}
+  if(S.phase==='epilogue'||S.phase==='free'){S.epT+=dt;S.e=Math.min(1,S.epT/12);
+    if(S.phase==='epilogue'&&S.epT>12.5)S.phase='free'}
+  // end text & invitation timeline (seconds after the epilogue begins)
+  if(S.epOn){const et=S.epT;const hasText=T.end!=='none';
+    S.endA=hasText?clamp((et-15)/3,0,1)*clamp((33-et)/3,0,1):0;
+    const invAt=hasText?34:19;
+    if(!S.submitted&&!S.declined&&et>invAt&&!S.inviteOn&&compose.hidden){S.inviteOn=true;S.inviteT=0}
+    if(S.inviteOn)S.inviteT+=dt}
+  if(S.hintT!=null)S.hintT+=dt;
+  // after the epilogue: point at a droplet (mouse, or finger touching/sliding) to read its line; zooming in shows the ones near the centre
+  S.peeks=S.peeks||[];
+  if(zoomOK()){const z=Z();let best=null,bd=1e9;
+    if(S.pointer&&(S.mouseIn||S.pressed)){for(const d of S.others){const sx=(d.x-S.camx)*z+W/2,sy=(d.y-S.camy)*z+H/2;const dd=Math.hypot(sx-S.pointer.x,sy-S.pointer.y);if(dd<Math.max(12,oR(d)*z+12)&&dd<bd){bd=dd;best=d}}}
+    if(best&&best===S.peekCand){S.peekDwell+=dt}else{S.peekCand=best;S.peekDwell=0}
+    const addPeek=(d,auto)=>{if(!d.text||d.label)return;const ex=S.peeks.find(p=>p.d===d);if(ex){ex.keep=t;if(!auto)ex.auto=false;return}
+      if(S.peeks.some(p=>!p.gone&&p.text===d.text)||S.labels.some(l=>l.text===d.text&&l.state!=='done'))return;   // the same line is already on screen
+      S.peeks.push({d,text:d.text,t0:t,keep:t,a:0,auto,born:t});const live=S.peeks.filter(p=>!p.gone);if(live.length>(auto?11:5)){const old=live.filter(p=>p.auto===auto).sort((a,b)=>a.t0-b.t0)[0];if(old)old.gone=true}};
+    if(best&&S.peekDwell>=0.3)addPeek(best,false);
+    if(S.uz>=1.6){const rr=Math.min(W,H)*clamp(0.18+0.12*(S.uz-1.6),0.18,0.45);const cand=S.others.map(d=>{const sx=(d.x-S.camx)*z+W/2,sy=(d.y-S.camy)*z+H/2;return[d,Math.hypot(sx-W/2,sy-H/2)]}).filter(a=>a[1]<rr).sort((a,b)=>a[1]-b[1]).slice(0,6);
+      for(const[d] of cand)addPeek(d,true)}}
+  for(let i=S.peeks.length-1;i>=0;i--){const p=S.peeks[i];if(!S.others.includes(p.d)&&!p.frozen){p.frozen=[p.d.x,p.d.y];p.gone=true}
+    const fade=p.gone?(t-p.t0>3):(t-p.keep>(p.auto?0.6:0)&&t-p.t0>3);
+    p.a=fade?p.a-dt:Math.min(1,p.a+dt*2.5);if(fade&&p.a<=0)S.peeks.splice(i,1)}
+  audioTick(dt);
+}
+
+// ---------- draw ----------
+function draw(){
+  const c=ctx,z=Z(),t=S.t;
+  c.setTransform(DPR,0,0,DPR,0,0);
+  c.fillStyle=rgba(CREAM,1);c.fillRect(0,0,W,H);
+  c.save();c.translate(W/2,H/2);c.scale(z,z);c.translate(-S.camx,-S.camy);
+  c.lineWidth=0.6/z;c.lineCap='round';c.lineJoin='round';
+  const f=1,N=activeLines();const B=[];for(let i=0;i<48;i++)B.push([]);
+  for(let i=0;i<N;i++){const q=fl[i];if(q.h.length<6)continue;const cl=0.5+0.5*Math.sin(q.x*f*0.0042+t*0.05)*Math.cos(q.y*f*0.0031-t*0.04);const life=Math.min(1,q.age/70,(q.life-q.age)/30);if(life<=0)continue;
+    const lv=Math.min(3,((cl*0.75+q.sh*0.25)*life*(0.3+0.7*(q.dn==null?1:q.dn))*4)|0);const k=(q.col*4+lv)*3;B[k].push(q);B[k+1].push(q);B[k+2].push(q)}
+  const PA=[0.3,1,0.7];
+  B.forEach((arr,i)=>{if(!arr.length)return;const p=i%3,lv=((i/3)|0)&3,col=(i/12)|0;c.strokeStyle=col?rgba(ORS[col-1],(0.16+lv*0.17)*PA[p]):rgba(INK,(0.08+lv*0.12)*PA[p]);c.beginPath();
+    for(const q of arr){const h=q.h,m=h.length/2;const s0=Math.floor(m*p/3),s1=p===2?m-1:Math.min(m-1,Math.floor(m*(p+1)/3));c.moveTo(h[s0*2],h[s0*2+1]);for(let j=s0+1;j<=s1;j++)c.lineTo(h[j*2],h[j*2+1]);if(p===2)c.lineTo(q.x,q.y)}c.stroke()});
+  if(T.isleLines){const dark=T.isleDark?ease(S.e):0;c.lineWidth=0.6/z;for(const pool of isleLines){if(!pool||!pool.length)continue;const TB=[[],[],[],[]];
+      for(const q of pool){if(q.h.length<6)continue;const life=Math.min(1,q.age/40,(q.life-q.age)/30);if(life<=0)continue;TB[Math.min(3,((0.4+q.sh*0.6)*life*4)|0)].push(q)}
+      TB.forEach((arr,lv)=>{if(!arr.length)return;c.strokeStyle=rgba(lv>1||dark>0.5?ORS[0]:ORS[1],(0.16+lv*0.17)*(1+0.6*dark));c.beginPath();for(const q of arr){const h=q.h;c.moveTo(h[0],h[1]);for(let j=2;j<h.length;j+=2)c.lineTo(h[j],h[j+1]);c.lineTo(q.x,q.y)}c.stroke()})}}
+  const lw=1/z;
+  for(const q of parts){const life=Math.sin(Math.PI*Math.min(1,q.age/q.life));c.fillStyle=q.col?rgba(ORS[q.col-1],(q.c?0.75:0.5)*life):rgba(INK,(q.c?0.5:0.3)*life);c.beginPath();c.arc(q.x,q.y,q.s*lw*1.4,0,7);c.fill()}
+  // flowing words
+  c.textAlign='center';c.textBaseline='middle';
+  const pxs=S.px,pys=S.py;for(const w of S.words){const near=clamp((Math.hypot(w.x-pxs,w.y-pys)*z-60)/140,0.15,1);const a=Math.min(1,w.age/2)*0.42*near;if(a<=0)continue;const ss=w.size*z;if(ss<3)continue;const sz=ss>15?15/z:w.size;c.fillStyle=rgba(INK,a*(ss>15?Math.max(0.25,15/ss):1));fillText(c,w.text,w.x,w.y,sz)}
+  // droplets
+  for(const d of S.others)dot(d.x,d.y,oR(d));
+  for(const b of S.absorb){const rr=Math.max(b.r0/S.zoom,2.2/z)*(1-b.t*0.6);neck(b.x,b.y,rr);dot(b.x,b.y,rr)}
+  dot(S.px,S.py,Math.max(radius(),3/z)*(1+0.07*Math.sin(t*2.2)));
+  c.restore();
+  if(S.edge>0.01){const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*0.18,W/2,H/2,Math.hypot(W,H)*0.55);g.addColorStop(0,rgba(CREAM,0));g.addColorStop(1,rgba(CREAM,0.92*S.edge));c.fillStyle=g;c.fillRect(0,0,W,H)}
+  if(S.endA>0&&T.endDim){const g=c.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.min(W,H)*0.42);g.addColorStop(0,rgba(CREAM,0.62*S.endA));g.addColorStop(1,rgba(CREAM,0));c.fillStyle=g;c.fillRect(0,0,W,H)}
+  // labels (screen space)
+  drawLabels();
+  // end text
+  if(S.endA>0){c.textAlign='center';c.textBaseline='middle';
+    if(T.endHalo){const sz=T.end==='date'?Math.min(56,W*0.11):Math.min(28,W*0.062);const tw=T.end==='date'?sz*3:measure(c,'一點一滴，匯成洋流',sz);c.save();c.translate(W/2,H/2);c.scale((tw*0.75+sz*1.5)/(sz*2.2),1);const g=c.createRadialGradient(0,0,0,0,0,sz*2.2);g.addColorStop(0,rgba(CREAM,0.92*S.endA));g.addColorStop(0.6,rgba(CREAM,0.7*S.endA));g.addColorStop(1,rgba(CREAM,0));c.fillStyle=g;c.fillRect(-sz*2.2,-sz*2.2,sz*4.4,sz*4.4);c.restore()}
+    c.fillStyle=rgba(INK,S.endA*0.88);
+    if(T.end==='date')fillText(c,'11.28',W/2,H*0.5,Math.min(56,W*0.11),400);else fillText(c,'一點一滴，匯成洋流',W/2,H*0.5,Math.min(28,W*0.062),400)}
+  if(S.hintT!=null&&S.hintT<7){const a=clamp(S.hintT/1.2,0,1)*clamp((7-S.hintT)/1.5,0,1);const sz=Math.min(15,W*0.038);c.textAlign='center';c.textBaseline='middle';c.fillStyle=rgba(INK,0.75*a);fillText(c,'想留的時候，點一下你的水滴',W/2,H-Math.max(56,H*0.1),sz)}
+  // invitation
+  inviteBox=null;
+  if(S.inviteOn){const a=clamp(S.inviteT/3,0,1);const size=Math.min(18,W*0.045);const txt=COMPOSE.inviteShort||'成為小水滴';let x,y,br=1;
+    if(T.inv==='follow'){const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2;x=clamp(sx,80,W-80);y=clamp(sy+Math.max(radius()*z,6)+size*1.6,size*2,H-size*2)}
+    else if(T.inv==='bottom'){x=W/2;y=H-Math.max(64,H*0.12);br=0.65+0.35*Math.sin(S.inviteT*1.6)}
+    else{y=H*0.5+Math.sin(S.inviteT*0.4)*H*0.18;x=W/2+Math.sin(S.inviteT*0.23)*W*0.18}
+    c.textAlign='center';c.textBaseline='middle';const wdt=measure(c,txt,size);const hov=S.invHover?1:0;
+    c.fillStyle=hov?rgba(OR,a):rgba(CREAM,0.78*a);c.fillRect(x-wdt/2-14,y-size*0.95,wdt+28,size*1.9);
+    c.fillStyle=hov?rgba(CREAM,a):rgba(ORS[0],a*br);fillText(c,txt,x,y,size,hov?600:400);inviteBox={x0:x-wdt/2-14,x1:x+wdt/2+14,y0:y-size,y1:y+size}}
+}
+function dot(x,y,r){const c=ctx;c.fillStyle=rgba(OR,1);c.beginPath();c.arc(x,y,r,0,7);c.fill();c.fillStyle=rgba(CREAM,0.85);c.beginPath();c.ellipse(x-r*0.34,y-r*0.36,r*0.24,r*0.13,-0.7,0,7);c.fill()}
+function neck(x,y,r){const c=ctx;const R=radius();const dx=S.px-x,dy=S.py-y,d=Math.hypot(dx,dy)||1;const nx=-dy/d,ny=dx/d;
+  c.fillStyle=rgba(OR,1);c.beginPath();c.moveTo(x+nx*r*0.8,y+ny*r*0.8);c.quadraticCurveTo((x+S.px)/2,(y+S.py)/2,S.px+nx*R*0.5,S.py+ny*R*0.5);
+  c.lineTo(S.px-nx*R*0.5,S.py-ny*R*0.5);c.quadraticCurveTo((x+S.px)/2,(y+S.py)/2,x-nx*r*0.8,y-ny*r*0.8);c.fill()}
+function drawLabels(){const c=ctx,z=Z();const size=Math.max(13,Math.min(16,W*0.036));c.textAlign='left';c.textBaseline='middle';
+  const near=[],held=[];const psx=(S.px-S.camx)*z+W/2,psy=(S.py-S.camy)*z+H/2,pr=radius()*z;
+  for(const L of S.labels){const w=measure(c,L.text,size);
+    if((L.state==='near'||L.state==='lost')&&L.d){L.wx=L.d.x;L.wy=L.d.y;const sx=(L.wx-S.camx)*z+W/2,sy=(L.wy-S.camy)*z+H/2;
+      let x=sx+12,y=sy-16;if(x+w>W-12)x=sx-12-w;near.push({L,x:clamp(x,12,W-12-w),y:clamp(y,size+6,H-size-6),w})}
+    else{L.wx=S.px;L.wy=S.py;held.push({L,x:clamp(psx-w/2,12,W-12-w),y:0,w})}}
+  // held lines stack upward above your droplet, newest closest
+  let y=psy-pr-size*1.1;for(let i=held.length-1;i>=0;i--){held[i].y=Math.max(size+6,y);y-=size*1.7}
+  // place every line so that no two boxes overlap (and none covers your droplet)
+  const placed=held.map(h=>({x0:h.x-6,x1:h.x+h.w+6,y0:h.y-size*0.85,y1:h.y+size*0.85}));placed.push({x0:psx-pr-6,x1:psx+pr+6,y0:psy-pr-6,y1:psy+pr+6});
+  const hit=(it)=>placed.some(p=>it.x-6<p.x1&&it.x+it.w+6>p.x0&&it.y-size*0.85<p.y1&&it.y+size*0.85>p.y0);
+  for(const p of (S.peeks||[])){const w=measure(c,p.text,size);const wx=p.frozen?p.frozen[0]:p.d.x,wy=p.frozen?p.frozen[1]:p.d.y;const sx=(wx-S.camx)*z+W/2,sy=(wy-S.camy)*z+H/2;
+    let x=sx+10,y=sy-14;if(x+w>W-12)x=sx-10-w;near.push({L:p,x:clamp(x,12,W-12-w),y:clamp(y,size+6,H-size-6),w})}
+  near.sort((a,b)=>(a.L.born||0)-(b.L.born||0));
+  for(const it of near){const y0=it.y;let k=0;while(hit(it)&&k<16){k++;const step=Math.ceil(k/2)*size*1.75*(k%2?1:-1);it.y=clamp(y0+step,size+6,H-size-6)}
+    placed.push({x0:it.x-6,x1:it.x+it.w+6,y0:it.y-size*0.85,y1:it.y+size*0.85})}
+  for(const it of [...near,...held]){const L=it.L;if(L.gx==null){L.gx=it.x;L.gy=it.y}else{const k=0.18;L.gx+=(it.x-L.gx)*k;L.gy+=(it.y-L.gy)*k}it.x=L.gx;it.y=L.gy}
+  for(const it of [...near,...held]){const a=clamp(it.L.a,0,1);if(a<=0)continue;c.fillStyle=rgba(CREAM,0.7*a);c.fillRect(it.x-5,it.y-size*0.8,it.w+10,size*1.6);c.fillStyle=rgba(INK,0.9*a);fillText(c,it.L.text,it.x,it.y,size)}}
+
+// ---------- loop (with a gentle performance guard) ----------
+S.px=S.camx=START[0];S.py=S.camy=START[1];
+resize();addEventListener('resize',resize);
+let last=performance.now(),fpsN=0,fpsT=0,checked=0;
+function loop(now){const raw=Math.min(0.05,(now-last)/1000);last=now;const dt=raw*(reduce?0.5:1);
+  step(dt);draw();
+  if(checked<3){fpsN++;fpsT+=raw;if(fpsT>2){const fps=fpsN/fpsT;if(fps<45&&lineScale>0.45){lineScale*=0.72}checked++;fpsN=0;fpsT=0}}
+  requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+// test hooks for verification (harmless in play)
+window.__hl={lines:()=>LINES,pushLine,S,T,prog,begin,TWC,ungeo,sdTW:(x,y)=>sdTW(x,y).d/G,gdiv:(x,y)=>gdiv(x,y),geo,Z:()=>Z(),steps:(n,dt)=>{for(let i=0;i<n;i++)step(dt||1/60);draw()}};
+})();
+</script>
+
