@@ -44,6 +44,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--f);overflow:hidd
 .blank input:focus{border-bottom-color:var(--orange)}
 .words{display:flex;flex-wrap:wrap;gap:6px}
 .words button{padding:4px 10px;font-size:14px}
+.lab .more{float:right;font:400 13px/1.6 var(--f);background:none;border:0;padding:0 2px;color:var(--deep);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .err{min-height:1.4em;font:400 13px var(--f-sans);color:var(--deep)}
 .acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .acts button{font:500 15px var(--f);padding:8px 16px;cursor:pointer;border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
@@ -67,7 +68,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--orange);outline
 <div id="compose" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="cTitle">
     <h2 id="cTitle"></h2>
-    <div class="lab">挑一句</div>
+    <div class="lab">挑一句<button type="button" class="more" id="cMore">換一組</button></div>
     <div class="presets" id="cPresets"></div>
     <div class="lab">或是填空</div>
     <div class="blank"><span id="cBefore"></span><input id="cInput" maxlength="8" autocomplete="off" aria-label="填空"><span id="cAfter"></span></div>
@@ -136,7 +137,7 @@ Promise.all([load('data/lines.json'),load('data/compose.json'),load('data/filter
   if(l&&Array.isArray(l.lines)&&l.lines.length)LINES=l.lines;
   if(c&&c.presets)COMPOSE=c;
   if(f&&f.words)FILTER=f;
-  linePool=shuffle(LINES.slice());
+  linePool=shuffle(poolLines());
   pullLines();retryPending();
 });
 // ---------- shared current (Supabase): everyone's lines ----------
@@ -148,15 +149,22 @@ function rpc(name,body,ms){const ac=new AbortController();const to=setTimeout(()
     .then(r=>r.ok?r.json():Promise.reject(r.status)).finally(()=>clearTimeout(to))}
 function pullLines(){   // 3 s or fall back to the built-in lines
   rpc('get_lines',{},3000).then(g=>{const cur=Array.isArray(g.curated)?g.curated:[],pl=Array.isArray(g.players)?g.players:[];
-    const all=[...new Set([...(cur.length?cur:LINES),...pl])].filter(x=>typeof x==='string'&&x.trim());
-    if(all.length){LINES=all;linePool=shuffle(LINES.slice())}S.online=true}).catch(()=>{S.online=false})}
+    const ok=x=>typeof x==='string'&&x.trim();
+    if(cur.filter(ok).length)LINES=[...new Set(cur.filter(ok))];PLAYERS=g.closed?[]:pl.filter(ok);
+    linePool=shuffle(poolLines());S.online=true}).catch(()=>{S.online=false})}
 function pushLine(text){rpc('submit_line',{p_text:text,p_device:deviceId()},8000).then(r=>{
     if(r&&(r.ok||r.reason==='blocked'||r.reason==='length'))setPending(false);else setPending(true)}).catch(()=>setPending(true))}
 function setPending(v){try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m){m.pending=v;localStorage.setItem('hl-mydrop',JSON.stringify(m))}}catch(e){}}
-function retryPending(){try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m&&m.pending&&m.text)pushLine(m.text)}catch(e){}}
+function retryPending(){if(isEDay())return;try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m&&m.pending&&m.text)pushLine(m.text)}catch(e){}}
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-let linePool=shuffle(LINES.slice());
-function nextLine(){if(!linePool.length)linePool=shuffle(LINES.slice());return linePool.pop()}
+let linePool=[];
+// ---------- election day (Taipei date): curated only, no vote words, no new lines ----------
+const ELECTION='2026-11-28',VOTE_RE=/投票|票|十一月二十八|11\/28/;let FAKE_DATE=null,PLAYERS=[];
+const today=()=>FAKE_DATE||new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const isEDay=()=>today()===ELECTION;
+function poolLines(){if(isEDay()){const c=LINES.filter(x=>!VOTE_RE.test(x));return c.length?c:['回頭看，好多人。']}
+  return [...new Set([...LINES,...PLAYERS])]}
+function nextLine(){if(!linePool.length)linePool=shuffle(poolLines());return linePool.pop()}
 
 // ---------- settings (#test) ----------
 const T={font:'serif',len:20,end:'line',over:'spread',pWait:true,pMax:false,pSlow:true,pPair:false,island:'AV',strait:'side',tws:'90',drift:2,mel:'finish',isle:'loop',bound:'mid',endHalo:true,endDim:true,inv:'follow',epN:150,proj:true,jit:true,wide:true,isleS:1.6,cam:'hold',isleLines:true,isleDark:true};
@@ -340,7 +348,7 @@ function spawnOther(amb,at){const{hw,hh}=view();
     const ca=Math.cos(a),sa=Math.sin(a);const r=Math.min(hw/Math.max(1e-3,Math.abs(ca)),hh/Math.max(1e-3,Math.abs(sa)))*(amb?1.04:1.12);
     let x=S.camx+ca*r,y=S.camy+sa*r;if(at){x=at[0];y=at[1]}else if(Math.random()>dens(x,y)+0.15)continue;
     let text=nextLine(),mine=false;
-    if(!amb&&S.myDrop&&!S.mySpawned&&prog()>=0.5){text=S.myDrop.text;S.mySpawned=true;mine=true}
+    if(!amb&&S.myDrop&&!S.mySpawned&&prog()>=0.5&&!isEDay()){text=S.myDrop.text;S.mySpawned=true;mine=true}
     const d={x,y,vx:0,vy:0,r0:9+Math.random()*4,text,mine,label:null,sd:Math.random()*10,pair:-1,amb:!!amb};S.others.push(d);return d}}
 function seedEp(){ // when the camera pulls back, there are droplets everywhere — about 70% on the island, 30% at sea
   const zt=epilogueEZ()*0.5*S.zoom;const fw=W/2/zt*1.05,fh=H/2/zt*1.05;const{hw,hh}=view();const nIs=Math.round(T.epN*0.7);
@@ -436,7 +444,7 @@ startEl.addEventListener('click',begin);startEl.addEventListener('keydown',e=>{i
 // ---------- invitation & composer ----------
 const compose=document.getElementById('compose');
 let inviteBox=null;
-function ownHit(x,y){if(!S.declined||S.submitted||!compose.hidden)return;const z=Z();const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2;if(Math.hypot(x-sx,y-sy)<Math.max(radius()*z,16)+12)openCompose()}
+function ownHit(x,y){if(isEDay()||!S.declined||S.submitted||!compose.hidden)return;const z=Z();const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2;if(Math.hypot(x-sx,y-sy)<Math.max(radius()*z,16)+12)openCompose()}
 function inviteHit(x,y,tap){if(!S.inviteOn||!inviteBox||S.submitted||!compose.hidden)return;const b=inviteBox;if(x>b.x0-8&&x<b.x1+8&&y>b.y0-10&&y<b.y1+10){S.invHover=false;cv.style.cursor='';openCompose()}}
 let pick=null;
 function showCompose(){compose.hidden=false;requestAnimationFrame(()=>requestAnimationFrame(()=>compose.classList.add('show')))}
@@ -444,13 +452,21 @@ function hideCompose(){compose.classList.remove('show');setTimeout(()=>{if(!comp
 function openCompose(){showCompose();S.inviteOn=false;
   document.getElementById('cTitle').textContent=COMPOSE.title||COMPOSE.invite;
   const pr=document.getElementById('cPresets');pr.innerHTML='';
-  for(const s of COMPOSE.presets){const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('aria-pressed','false');b.onclick=()=>{pick={kind:'preset',text:s};sync()};pr.append(b)}
+  renderPresets();
   const bl=COMPOSE.blank;document.getElementById('cBefore').textContent=bl.before;document.getElementById('cAfter').textContent=bl.after;
   const inp=document.getElementById('cInput');inp.value='';inp.maxLength=bl.maxLen||8;
   const ws=document.getElementById('cWords');ws.innerHTML='';
   for(const w of bl.words){const b=document.createElement('button');b.type='button';b.textContent=w;b.setAttribute('aria-pressed','false');b.onclick=()=>{inp.value=w;pick={kind:'blank',text:w};sync()};ws.append(b)}
   inp.oninput=()=>{pick=inp.value.trim()?{kind:'blank',text:inp.value.trim()}:null;sync()};
   pick=null;sync();setTimeout(()=>pr.querySelector('button')?.focus({preventScroll:true}),350)}
+let deck=[];
+function nextGroup(){const n=COMPOSE.presetGroup||12,all=COMPOSE.presets||[];if(all.length<=n)return all.slice();
+  let g=deck.splice(0,n);if(g.length<n){deck=shuffle(all.filter(x=>!g.includes(x)));g=g.concat(deck.splice(0,n-g.length))}return g}
+function renderPresets(){const pr=document.getElementById('cPresets');pr.innerHTML='';const g=nextGroup();
+  for(const s of g){const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('aria-pressed','false');b.onclick=()=>{pick={kind:'preset',text:s};sync()};pr.append(b)}
+  if(pick&&pick.kind==='preset'&&!g.includes(pick.text))pick=null;pr.scrollTop=0;
+  document.getElementById('cMore').hidden=(COMPOSE.presets||[]).length<=(COMPOSE.presetGroup||12);sync()}
+document.getElementById('cMore').onclick=renderPresets;
 function sync(){document.querySelectorAll('#cPresets button').forEach(b=>b.setAttribute('aria-pressed',String(pick&&pick.kind==='preset'&&b.textContent===pick.text)));
   document.querySelectorAll('#cWords button').forEach(b=>b.setAttribute('aria-pressed',String(pick&&pick.kind==='blank'&&b.textContent===pick.text)));
   if(pick&&pick.kind==='preset')document.getElementById('cInput').value='';
@@ -605,7 +621,7 @@ function step(dt){
   if(S.epOn){const et=S.epT;const hasText=T.end!=='none';
     S.endA=hasText?clamp((et-15)/3,0,1)*clamp((33-et)/3,0,1):0;
     const invAt=hasText?34:19;
-    if(!S.submitted&&!S.declined&&et>invAt&&!S.inviteOn&&compose.hidden){S.inviteOn=true;S.inviteT=0}
+    if(!S.submitted&&!S.declined&&et>invAt&&!S.inviteOn&&compose.hidden&&!isEDay()){S.inviteOn=true;S.inviteT=0}
     if(S.inviteOn)S.inviteT+=dt}
   if(S.hintT!=null)S.hintT+=dt;
   // after the epilogue: point at a droplet (mouse, or finger touching/sliding) to read its line; zooming in shows the ones near the centre
@@ -704,7 +720,7 @@ function loop(now){const raw=Math.min(0.05,(now-last)/1000);last=now;const dt=ra
   requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 // test hooks for verification (harmless in play)
-window.__hl={lines:()=>LINES,pushLine,S,T,prog,begin,TWC,ungeo,sdTW:(x,y)=>sdTW(x,y).d/G,gdiv:(x,y)=>gdiv(x,y),geo,Z:()=>Z(),steps:(n,dt)=>{for(let i=0;i<n;i++)step(dt||1/60);draw()}};
+window.__hl={lines:()=>LINES,pool:()=>poolLines(),players:()=>PLAYERS,setDate:d=>{FAKE_DATE=d;linePool=[]},isEDay:()=>isEDay(),openCompose:()=>openCompose(),pushLine,S,T,prog,begin,TWC,ungeo,sdTW:(x,y)=>sdTW(x,y).d/G,gdiv:(x,y)=>gdiv(x,y),geo,Z:()=>Z(),steps:(n,dt)=>{for(let i=0;i<n;i++)step(dt||1/60);draw()}};
 })();
 </script>
 

@@ -62,14 +62,21 @@ language sql stable security definer set search_path = '' as $$
   limit 1
 $$;
 
+-- ============ 4b. 投票日（台北時間 2026-11-28 整天）============
+create or replace function public.is_eday() returns boolean
+language sql stable set search_path = '' as $$
+  select (now() at time zone 'Asia/Taipei')::date = date '2026-11-28'
+$$;
+
 -- ============ 5. 送出一句 ============
--- 回傳 {ok:true} 或 {ok:false, reason: device|length|busy|blocked}
+-- 回傳 {ok:true} 或 {ok:false, reason: closed|device|length|busy|blocked}
 create or replace function public.submit_line(p_text text, p_device text) returns json
 language plpgsql security definer set search_path = '' as $$
 declare
   t text := btrim(coalesce(p_text, ''));
   n text; lid bigint; old_id bigint; flag text;
 begin
+  if public.is_eday() then return json_build_object('ok', false, 'reason', 'closed'); end if;
   if p_device is null or p_device !~ '^[A-Za-z0-9-]{8,64}$' then
     return json_build_object('ok', false, 'reason', 'device'); end if;
   if char_length(t) < 1 or char_length(t) > 20 then
@@ -108,16 +115,24 @@ end $$;
 
 -- ============ 6. 拿一包台詞 ============
 -- curated：精選隨機最多 80；players：公開玩家句，最新 20 + 其餘隨機 20
+-- 投票日：只給精選、拿掉含「投票／票／十一月二十八／11/28」的，players 為空，closed = true
 create or replace function public.get_lines() returns json
-language sql stable security definer set search_path = '' as $$
-  with cur as (select text from public.lines where status = 'curated' order by random() limit 80),
+language plpgsql stable security definer set search_path = '' as $$
+declare e boolean := public.is_eday();
+begin
+  if e then
+    return json_build_object('closed', true, 'players', '[]'::json,
+      'curated', coalesce((select json_agg(text) from (select text from public.lines
+        where status = 'curated' and text !~ '投票|票|十一月二十八|11/28' order by random() limit 80) c), '[]'::json));
+  end if;
+  return (with cur as (select text from public.lines where status = 'curated' order by random() limit 80),
        rec as (select id, text from public.lines where status = 'public' order by created_at desc limit 20),
        rnd as (select text from public.lines where status = 'public' and id not in (select id from rec)
                order by random() limit 20)
-  select json_build_object(
+  select json_build_object('closed', false,
     'curated', coalesce((select json_agg(text) from cur), '[]'::json),
-    'players', coalesce((select json_agg(text) from (select text from rec union all select text from rnd) p), '[]'::json))
-$$;
+    'players', coalesce((select json_agg(text) from (select text from rec union all select text from rnd) p), '[]'::json)));
+end $$;
 
 -- ============ 7. 權限：訪客碰不到表，只能呼叫兩個功能 ============
 alter table public.lines        enable row level security;
@@ -125,22 +140,51 @@ alter table public.picks        enable row level security;
 alter table public.filter_words enable row level security;
 revoke all on public.lines, public.picks, public.filter_words from anon, authenticated;
 revoke all on function public.submit_line(text, text), public.get_lines(),
-              public.line_flag(text), public.picks_count() from public, anon, authenticated;
+              public.line_flag(text), public.picks_count(), public.is_eday() from public, anon, authenticated;
 grant execute on function public.submit_line(text, text), public.get_lines() to anon, authenticated;
 
--- ============ 8. 初始資料 ============
--- 精選句（目前的暫定台詞＋預設句；之後換成徵集來的）
+-- ============ 8. 初始資料（重跑會整批換新；玩家句不動）============
+-- 精選句：換成這一版；舊的 seed 精選若不在清單內就刪掉
+delete from public.lines where source = 'seed' and text not in (
+  '我也以為只有我在乎。',
+  '原來你也在這裡。',
+  '我從南部上來，我會返鄉投票。',
+  '我希望巷口的公園多一點樹。',
+  '我不太會講道理，但我想站出來。',
+  '第一次投票，有點緊張。',
+  '我在國外，這次飛回來。',
+  '我不認識你，但我們往同一個方向。',
+  '小水滴推不動什麼，可是我們不只一滴水。',
+  '我以為大家都放棄了。',
+  '我想讓我的孩子在這裡長大。',
+  '我爸媽跟我意見不一樣，但我們都愛這裡。',
+  '下班好累，但還是想做點什麼。',
+  '這座城市對我很好，我想對它好一點。',
+  '我跟你一樣，猶豫了很久。',
+  '我只是想被聽見。',
+  '慢一點沒關係，我們一起漂。',
+  '我住在這裡好幾年了，還算外地人嗎？',
+  '我想要的不多，只是更好一點的日常。',
+  '我把話傳給家裡的長輩了。',
+  '我不喜歡吵架，所以用投票說話。',
+  '暖的不是水，是身旁有人。',
+  '一起，就不怕被沖散。',
+  '我不確定會不會改變什麼，但我想試試。',
+  '我曾經很冷漠，但這次我決定不再沉默。',
+  '我們會流到哪裡呢？',
+  '回頭看，好多人。',
+  '十一月二十八日，見。'
+);
 insert into public.lines(text, status, source) values
   ('我也以為只有我在乎。', 'curated', 'seed'),
   ('原來你也在這裡。', 'curated', 'seed'),
-  ('我從南部上來，票還留在家鄉。', 'curated', 'seed'),
-  ('我每天搭捷運，想讓它更準時一點。', 'curated', 'seed'),
-  ('我只是想讓巷口的公園多一點樹。', 'curated', 'seed'),
+  ('我從南部上來，我會返鄉投票。', 'curated', 'seed'),
+  ('我希望巷口的公園多一點樹。', 'curated', 'seed'),
   ('我不太會講道理，但我想站出來。', 'curated', 'seed'),
   ('第一次投票，有點緊張。', 'curated', 'seed'),
   ('我在國外，這次飛回來。', 'curated', 'seed'),
   ('我不認識你，但我們往同一個方向。', 'curated', 'seed'),
-  ('一滴水推不動什麼，可是我們不只一滴。', 'curated', 'seed'),
+  ('小水滴推不動什麼，可是我們不只一滴水。', 'curated', 'seed'),
   ('我以為大家都放棄了。', 'curated', 'seed'),
   ('我想讓我的孩子在這裡長大。', 'curated', 'seed'),
   ('我爸媽跟我意見不一樣，但我們都愛這裡。', 'curated', 'seed'),
@@ -149,23 +193,24 @@ insert into public.lines(text, status, source) values
   ('我跟你一樣，猶豫了很久。', 'curated', 'seed'),
   ('我只是想被聽見。', 'curated', 'seed'),
   ('慢一點沒關係，我們一起漂。', 'curated', 'seed'),
-  ('我住在這裡十年了，還算外地人嗎？', 'curated', 'seed'),
+  ('我住在這裡好幾年了，還算外地人嗎？', 'curated', 'seed'),
   ('我想要的不多，只是更好一點的日常。', 'curated', 'seed'),
   ('我把話傳給家裡的長輩了。', 'curated', 'seed'),
   ('我不喜歡吵架，所以用投票說話。', 'curated', 'seed'),
-  ('你停下來，我才追得上你。', 'curated', 'seed'),
-  ('原來暖的不是水，是旁邊有人。', 'curated', 'seed'),
+  ('暖的不是水，是身旁有人。', 'curated', 'seed'),
   ('一起，就不怕被沖散。', 'curated', 'seed'),
   ('我不確定會不會改變什麼，但我想試試。', 'curated', 'seed'),
-  ('我曾經很冷漠，後來發現冷漠也是一種選擇。', 'curated', 'seed'),
+  ('我曾經很冷漠，但這次我決定不再沉默。', 'curated', 'seed'),
   ('我們會流到哪裡呢？', 'curated', 'seed'),
   ('回頭看，好多人。', 'curated', 'seed'),
   ('十一月二十八日，見。', 'curated', 'seed')
-on conflict (norm) do nothing;
+on conflict (norm) do update set status = 'curated', source = 'seed', text = excluded.text;
 
--- 關鍵字：block 拒收
+-- 關鍵字：整批換新
+delete from public.filter_words;
+
+-- block 直接拒收：髒話與人身攻擊、族群／政治蔑稱、暴力字
 insert into public.filter_words(word, kind, is_regex) values
-  ('幹', 'block', false),
   ('靠北', 'block', false),
   ('靠杯', 'block', false),
   ('操你', 'block', false),
@@ -177,9 +222,6 @@ insert into public.filter_words(word, kind, is_regex) values
   ('去死', 'block', false),
   ('垃圾', 'block', false),
   ('廢物', 'block', false),
-  ('賤', 'block', false),
-  ('婊', 'block', false),
-  ('屌', 'block', false),
   ('屁眼', 'block', false),
   ('低能', 'block', false),
   ('腦殘', 'block', false),
@@ -199,34 +241,39 @@ insert into public.filter_words(word, kind, is_regex) values
   ('cunt', 'block', false),
   ('nmsl', 'block', false),
   ('死全家', 'block', false),
-  ('殺', 'block', false),
   ('https?://', 'block', true),
   ('www\.', 'block', true),
-  ('\.(com|tw|net|org|cc|me|io)\b', 'block', true),
+  ('\.(com|tw|net|org|cc|me|io)\y', 'block', true),
   ('\d{5,}', 'block', true),
   ('@', 'block', true),
   ('line\s*id', 'block', true)
 on conflict (word) do nothing;
 
--- 關鍵字：review 待審（人名、政黨、選舉用語——不擋，但先藏起來等你看）
+-- review 待審：單字（避免誤擋樹幹、殺價）、其他政治人物名、政黨名、罷免
+-- 沈伯洋、拉票用語（投給、凍蒜…）不在名單內＝直接公開
 insert into public.filter_words(word, kind, is_regex) values
-  ('沈伯洋', 'review', false),
-  ('伯洋', 'review', false),
+  ('幹', 'review', false),
+  ('殺', 'review', false),
+  ('賤', 'review', false),
+  ('婊', 'review', false),
+  ('屌', 'review', false),
   ('蔣萬安', 'review', false),
   ('萬安', 'review', false),
   ('柯文哲', 'review', false),
   ('黃國昌', 'review', false),
   ('賴清德', 'review', false),
   ('鄭麗文', 'review', false),
+  ('侯友宜', 'review', false),
+  ('韓國瑜', 'review', false),
+  ('蔡英文', 'review', false),
+  ('朱立倫', 'review', false),
+  ('盧秀燕', 'review', false),
+  ('習近平', 'review', false),
   ('民進黨', 'review', false),
   ('國民黨', 'review', false),
   ('民眾黨', 'review', false),
+  ('時代力量', 'review', false),
   ('共產黨', 'review', false),
   ('中共', 'review', false),
-  ('罷免', 'review', false),
-  ('投給', 'review', false),
-  ('票投', 'review', false),
-  ('凍蒜', 'review', false),
-  ('當選', 'review', false),
-  ('落選', 'review', false)
+  ('罷免', 'review', false)
 on conflict (word) do nothing;
