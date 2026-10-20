@@ -293,9 +293,13 @@ function softDist(x,y){let acc=0,wl=0;for(let i=0,j=TW.length-1;i<TW.length;j=i+
   let u=((x-xj)*ex+(y-yj)*ey)/L2;u=clamp(u,0,1);const px=xj+ex*u-x,py=yj+ey*u-y;const d=Math.sqrt(px*px+py*py)/G+0.004;acc+=L*Math.pow(d,-4);wl+=L}return Math.pow(acc/wl,-0.25)}
 function useGrid(){const key=[T.island,T.strait,T.isle,T.isleS,T.proj,T.wide].join('|');if(!GRIDS[key]){const n=GX*GY,vx=new Float32Array(n),vy=new Float32Array(n),gd=new Float32Array(n),dv=new Float32Array(n);
     const IN=(lon,lat)=>lon>119.8&&lon<122.2&&lat>21.7&&lat<25.5;
-    let SD=null;if(T.island!=='C'){SD=new Float32Array(n);for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;if(!IN(lon,lat))continue;const[x,y]=geo(lon,lat);let v=softDist(x,y);
+    let SD=null;if(T.island!=='C'){SD=new Float32Array(n);for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;if(!IN(lon,lat))continue;const[x,y]=geo(lon,lat);let v=softDist(x,y)*(sdTW(x,y).d<0?1:-1);   // signed: positive inside the island
       if(T.island==='AT')v*=Math.exp(-Math.hypot((lon-TPE[0])*CLAT,lat-TPE[1])/1.1);   // the loop's centre slides to Taipei
-      SD[j*GX+i]=v}}
+      SD[j*GX+i]=v}
+      // round off the sharp turns: blur the loop's contours in the island interior, keep them as they are near the coast
+      const SD0=new Float32Array(SD),R=8;const bi0=Math.round((119.8-GB.lo0)/GB.step)+R,bi1=Math.round((122.2-GB.lo0)/GB.step)-R,bj0=Math.round((GB.la1-25.5)/GB.step)+R,bj1=Math.round((GB.la1-21.7)/GB.step)-R;
+      for(let pass=0;pass<3;pass++){const B=new Float32Array(SD);for(let j=bj0;j<=bj1;j++)for(let i=bi0;i<=bi1;i++){const k=j*GX+i;let sum=0;for(let dj=-R;dj<=R;dj++){const row=k+dj*GX;for(let di=-R;di<=R;di++)sum+=SD[row+di]}B[k]=sum/((2*R+1)*(2*R+1))}SD.set(B)}
+      for(let k=0;k<n;k++){const w=SD0[k]>0?sstep(0.0,0.07,SD0[k])*sstep(0.0,0.06,SD[k]):0;SD[k]=SD0[k]*(1-w)+SD[k]*w}}
     for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const lon=GB.lo0+i*GB.step,lat=GB.la1-j*GB.step;const k=j*GX+i;
       if(lon<117||lon>125||lat<19.5||lat>27.5){vx[k]=0.12;vy[k]=-1;gd[k]=0.07;continue}
       let vinA=null;if(SD&&IN(lon,lat)&&i>0&&j>0&&i<GX-1&&j<GY-1){const gx=(SD[k+1]-SD[k-1])/CLAT,gy=(SD[k+GX]-SD[k-GX]);const L=Math.hypot(gx,gy);if(L>1e-9)vinA=[-gy/L,gx/L]}
