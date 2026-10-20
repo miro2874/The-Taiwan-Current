@@ -32,6 +32,11 @@ body{background:var(--cream);color:var(--ink);font-family:var(--f);overflow:hidd
 #start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1.6s ease}
 #start h1{margin:0;font:400 clamp(30px,7vw,54px)/1 var(--f);letter-spacing:.35em;padding-left:.35em;color:var(--ink);background:rgba(251,249,243,.72);padding:.5em .6em .5em .95em}
 #start.gone{opacity:0;pointer-events:none}
+#start .st{display:flex;flex-direction:column;align-items:center;gap:14px}
+#start .tap{display:flex;align-items:center;gap:10px;font:400 15px/1 var(--f);letter-spacing:.08em;color:var(--mute);background:rgba(251,249,243,.72);padding:.55em 1em;animation:breath 3.2s ease-in-out infinite}
+#start .drop{display:block;width:10px;height:10px;border-radius:50%;background:var(--orange);animation:bob 1.6s ease-in-out infinite}
+@keyframes breath{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.15)}}
 #compose{position:fixed;inset:0;display:flex;opacity:0;transition:opacity .6s ease;align-items:center;justify-content:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;background:rgba(251,249,243,.55);z-index:10;-webkit-user-select:text;user-select:text;touch-action:auto}
 .card{transform:translateY(14px);transition:transform .7s cubic-bezier(.2,.7,.2,1);width:min(460px,100%);max-height:calc(100% - 8px);overflow:auto;background:var(--cream);border:1.5px solid var(--ink);padding:22px 20px 18px;display:flex;flex-direction:column;gap:14px;font-family:var(--f)}
 .card h2{margin:0;font:400 19px/1.55 var(--f);text-wrap:balance}
@@ -51,7 +56,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--f);overflow:hidd
 .acts .go{background:var(--orange);border-color:var(--orange);color:var(--cream)}
 .acts .go:disabled{opacity:.4;cursor:default}
 #compose.show{opacity:1}#compose.show .card{transform:none}
-@media (prefers-reduced-motion:reduce){#compose,.card{transition:none}}
+@media (prefers-reduced-motion:reduce){#compose,.card{transition:none}#start .tap,#start .drop{animation:none}}
 button:focus-visible,input:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 #test{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:max(10px,env(safe-area-inset-right,0px));z-index:20;background:rgba(22,20,18,.9);color:var(--cream);font:500 12px var(--f-sans);padding:10px 12px;display:flex;flex-direction:column;gap:7px;max-width:250px;touch-action:auto}
 #test b{letter-spacing:.12em;color:#f2a27a}
@@ -63,7 +68,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--orange);outline
 </style>
 
 <canvas id="c" aria-label="匯聚洋流：操控一顆小水滴在洋流裡漂流"></canvas>
-<div id="start" role="button" tabindex="0" aria-label="點一下開始"><h1>匯聚洋流</h1></div>
+<div id="start" role="button" tabindex="0" aria-label="點一下，成為小水滴"><div class="st"><h1>匯聚洋流</h1><div class="tap"><i class="drop"></i><span>點一下，成為小水滴</span></div></div></div>
 
 <div id="compose" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="cTitle">
@@ -187,7 +192,7 @@ const S={
   lastInput:-99, pointer:null, pressed:false, keys:{}, mouseIn:false,
   others:[], absorb:[], labels:[], words:[], vort:[],
   epT:0, e:0, tw:null, endA:0, inviteOn:false, inviteT:0, composed:false,
-  myDrop:null, mySpawned:false, mergeClock:0, pS:0
+  myDrop:null, mySpawned:false, fx:[], steerT:0, playT:0, tutA:0, mergeClock:0, pS:0
 };
 let fl=[],parts=[],twl=[],BASE=0,lineScale=1,isleLines=[];
 const total=()=>+T.len;
@@ -437,7 +442,7 @@ function stopped(){return S.t-S.lastInput>1&&!steering()}   // resting = not ste
 
 // ---------- start ----------
 const startEl=document.getElementById('start');
-function begin(){if(S.phase!=='title')return;S.phase='play';startEl.classList.add('gone');audioStart();S.lastInput=S.t;
+function begin(){if(S.phase!=='title')return;S.phase='play';startEl.classList.add('gone');audioStart();S.lastInput=S.t;S.steerT=0;S.playT=0;S.tutA=0;
   try{const m=JSON.parse(localStorage.getItem('hl-mydrop')||'null');if(m&&m.text)S.myDrop=m}catch(e){}}
 startEl.addEventListener('click',begin);startEl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')begin()});
 
@@ -506,18 +511,23 @@ function fillText(c,s,x,y,size,weight){const fam=FONTS[T.font];
 function measure(c,s,size){c.font=`400 ${size}px ${FONTS[T.font]}`;return c.measureText(s).width}
 
 // ---------- step ----------
+const SPD=1.3,TOUCH=matchMedia('(pointer: coarse)').matches;   // player speed (playtest: 1.3x)
 function step(dt){
   S.t+=dt;const t=S.t;const sc=1/zf();
-  const playing=S.phase!=='title';S.pS+=(prog()-S.pS)*Math.min(1,dt*0.12);
+  const playing=S.phase!=='title';
+  if(S.phase==='play'){S.playT=(S.playT||0)+dt;if(steering())S.steerT=(S.steerT||0)+dt}
+  {const tg=S.phase==='play'&&(S.steerT||0)<1&&(S.playT||0)>0.6?1:0;S.tutA=(S.tutA||0)+(tg-(S.tutA||0))*Math.min(1,dt*(tg?2:3))}
+  for(let i=S.fx.length-1;i>=0;i--){S.fx[i].t+=dt;if(S.fx[i].t>1.1)S.fx.splice(i,1)}
+  S.pS+=(prog()-S.pS)*Math.min(1,dt*0.12);
   // player: always drifts with the current, even when resting
   const R=radius();const kd=keyDir();
   const[fvx,fvy]=vel(S.px,S.py,t);const drift=(S.phase==='handoff'||S.phase==='epilogue'?60:22*T.drift)*sc*gmag(S.px,S.py);
   let tvx=fvx*drift,tvy=fvy*drift;
   if(playing&&S.phase!=='epilogue'){
     const ctrl=S.phase==='handoff'?0.35:1;
-    if(kd){tvx+=kd[0]*130*sc*ctrl;tvy+=kd[1]*130*sc*ctrl;S.lastInput=t}
+    if(kd){tvx+=kd[0]*130*SPD*sc*ctrl;tvy+=kd[1]*130*SPD*sc*ctrl;S.lastInput=t}
     else if(S.pointer&&(S.pressed||mouseLive())){const[wx,wy]=toWorld(S.pointer.x,S.pointer.y);const dx=wx-S.px,dy=wy-S.py,d=Math.hypot(dx,dy);
-      if(d*Z()>4){const sp=Math.min(d*2.2,150*sc);tvx=lerp(tvx,dx/d*sp,ctrl);tvy=lerp(tvy,dy/d*sp,ctrl)}}
+      if(d*Z()>4){const sp=Math.min(d*2.2*SPD,150*SPD*sc);tvx=lerp(tvx,dx/d*sp,ctrl);tvy=lerp(tvy,dy/d*sp,ctrl)}}
   }
   // soft boundary: far from Taiwan, the sea slowly carries you back
   S.edge=0;if(playing&&S.phase!=='epilogue'){const sd0=sdTW(S.px,S.py).d/G;const{hw:bw,hh:bh}=view();
@@ -581,7 +591,7 @@ function step(dt){
   if(T.pMax){comers.sort((a,b)=>Math.hypot(a.x-S.px,a.y-S.py)-Math.hypot(b.x-S.px,b.y-S.py));comers=comers.slice(0,2)}
   const coming=new Set(canCome?comers:[]);
   for(let i=S.others.length-1;i>=0;i--){const d=S.others[i];const[ox,oy]=vel(d.x,d.y,t);const dx=S.px-d.x,dy=S.py-d.y,dist=Math.hypot(dx,dy)||1;
-    const touch=R+oR(d)*0.7;
+    const touch=R+oR(d);
     if(d.pair>=0){ // side by side for a moment, drifting together, then merge
       d.pair+=dt;const gap=R+oR(d)*1.25;const ang=d.pa;const tx=S.px+Math.cos(ang)*gap,ty=S.py+Math.sin(ang)*gap;d.x+=(tx-d.x)*Math.min(1,dt*3);d.y+=(ty-d.y)*Math.min(1,dt*3);d.pa+=dt*0.15;
       if(d.pair>2.5){S.others.splice(i,1);S.absorb.push({x:d.x,y:d.y,r0:d.r0,t:0,label:d.label});if(d.label){d.label.state='merged';d.label.hold=0}}continue}
@@ -604,7 +614,7 @@ function step(dt){
       continue}
     if(!(d.ep&&S.phase==='epilogue')&&(Math.abs(d.x-S.camx)>hw*1.8||Math.abs(d.y-S.camy)>hh*1.8)){if(d.label)d.label.state='lost';S.others.splice(i,1)}}
   for(let i=S.absorb.length-1;i>=0;i--){const b=S.absorb[i];b.t+=dt/0.7;b.x+=(S.px-b.x)*Math.min(1,dt*3);b.y+=(S.py-b.y)*Math.min(1,dt*3);
-    if(b.t>=1){S.absorb.splice(i,1);S.n++;chime(S.n)}}
+    if(b.t>=1){S.absorb.splice(i,1);S.n++;chime(S.n);S.fx.push({t:0})}}
   // labels
   for(let i=S.labels.length-1;i>=0;i--){const L=S.labels[i];
     if(L.state==='near'){L.a=Math.min(1,L.a+dt*2.2);if(L.leaving){L.hold+=dt;if(L.hold>4){L.state='merged';L.hold=0}}}
@@ -654,6 +664,9 @@ function draw(){
   const PA=[0.3,1,0.7];
   B.forEach((arr,i)=>{if(!arr.length)return;const p=i%3,lv=((i/3)|0)&3,col=(i/12)|0;c.strokeStyle=col?rgba(ORS[col-1],(0.16+lv*0.17)*PA[p]):rgba(INK,(0.08+lv*0.12)*PA[p]);c.beginPath();
     for(const q of arr){const h=q.h,m=h.length/2;const s0=Math.floor(m*p/3),s1=p===2?m-1:Math.min(m-1,Math.floor(m*(p+1)/3));c.moveTo(h[s0*2],h[s0*2+1]);for(let j=s0+1;j<=s1;j++)c.lineTo(h[j*2],h[j*2+1]);if(p===2)c.lineTo(q.x,q.y)}c.stroke()});
+  {const f0=S.fx.length?S.fx[S.fx.length-1].t:9;if(f0<0.8){const a=0.4*(1-f0/0.8),rg=170/z,rg2=rg*rg;c.strokeStyle=rgba(ORS[1],a);c.lineWidth=1/z;c.beginPath();
+    for(let i=0;i<N;i++){const q=fl[i];if(q.h.length<6)continue;const dx=q.x-S.px,dy=q.y-S.py;if(dx*dx+dy*dy>rg2)continue;const h=q.h;c.moveTo(h[0],h[1]);for(let j=2;j<h.length;j+=2)c.lineTo(h[j],h[j+1]);c.lineTo(q.x,q.y)}
+    c.stroke();c.lineWidth=0.6/z}}
   if(T.isleLines){const dark=T.isleDark?ease(S.e):0;c.lineWidth=0.6/z;for(const pool of isleLines){if(!pool||!pool.length)continue;const TB=[[],[],[],[]];
       for(const q of pool){if(q.h.length<6)continue;const life=Math.min(1,q.age/40,(q.life-q.age)/30);if(life<=0)continue;TB[Math.min(3,((0.4+q.sh*0.6)*life*4)|0)].push(q)}
       TB.forEach((arr,lv)=>{if(!arr.length)return;c.strokeStyle=rgba(lv>1||dark>0.5?ORS[0]:ORS[1],(0.16+lv*0.17)*(1+0.6*dark));c.beginPath();for(const q of arr){const h=q.h;c.moveTo(h[0],h[1]);for(let j=2;j<h.length;j+=2)c.lineTo(h[j],h[j+1]);c.lineTo(q.x,q.y)}c.stroke()})}}
@@ -665,7 +678,12 @@ function draw(){
   // droplets
   for(const d of S.others)dot(d.x,d.y,oR(d));
   for(const b of S.absorb){const rr=Math.max(b.r0/S.zoom,2.2/z)*(1-b.t*0.6);neck(b.x,b.y,rr);dot(b.x,b.y,rr)}
-  dot(S.px,S.py,Math.max(radius(),3/z)*(1+0.07*Math.sin(t*2.2)));
+  {const br=1+0.07*Math.sin(t*2.2);let pop=1;for(const e of S.fx)if(e.t<0.45)pop=Math.max(pop,1+0.15*Math.sin(Math.PI*e.t/0.45));
+    const pr=Math.max(radius(),3/z)*br*pop;
+    // own halo: soft orange glow, breathing
+    const hR=Math.max(pr*3.2,pr+16/z),hg=c.createRadialGradient(S.px,S.py,pr*0.8,S.px,S.py,hR);hg.addColorStop(0,rgba(OR,0.42*(0.75+0.25*Math.sin(t*2.2))));hg.addColorStop(0.5,rgba(OR,0.14*(0.75+0.25*Math.sin(t*2.2))));hg.addColorStop(1,rgba(OR,0));c.fillStyle=hg;c.beginPath();c.arc(S.px,S.py,hR,0,7);c.fill();
+    for(const e of S.fx){const k=Math.min(1,e.t/1.0);const rr=pr+(70*ease(k))/z;c.strokeStyle=rgba(OR,0.75*(1-k));c.lineWidth=1.6/z;c.beginPath();c.arc(S.px,S.py,rr,0,7);c.stroke()}
+    dot(S.px,S.py,pr)}
   c.restore();
   if(S.edge>0.01){const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*0.18,W/2,H/2,Math.hypot(W,H)*0.55);g.addColorStop(0,rgba(CREAM,0));g.addColorStop(1,rgba(CREAM,0.92*S.edge));c.fillStyle=g;c.fillRect(0,0,W,H)}
   if(S.endA>0&&T.endDim){const g=c.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.min(W,H)*0.42);g.addColorStop(0,rgba(CREAM,0.62*S.endA));g.addColorStop(1,rgba(CREAM,0));c.fillStyle=g;c.fillRect(0,0,W,H)}
@@ -677,6 +695,9 @@ function draw(){
     c.fillStyle=rgba(INK,S.endA*0.88);
     if(T.end==='date')fillText(c,'11.28',W/2,H*0.5,Math.min(56,W*0.11),400);else fillText(c,'一點一滴，匯成洋流',W/2,H*0.5,Math.min(28,W*0.062),400)}
   if(S.hintT!=null&&S.hintT<7){const a=clamp(S.hintT/1.2,0,1)*clamp((7-S.hintT)/1.5,0,1);const sz=Math.min(15,W*0.038);c.textAlign='center';c.textBaseline='middle';c.fillStyle=rgba(INK,0.75*a);fillText(c,'想留的時候，點一下你的水滴',W/2,H-Math.max(56,H*0.1),sz)}
+  if((S.tutA||0)>0.01){const a=S.tutA,sz=Math.min(15,W*0.04);const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2,pr=Math.max(radius()*z,6);
+    const txt=TOUCH?'按住拖動':'移動滑鼠，或用方向鍵';c.textAlign='center';c.textBaseline='middle';c.fillStyle=rgba(INK,0.7*a);fillText(c,txt,W/2,H-Math.max(64,H*0.12),sz);
+    const o=7*Math.sin(t*3.2),ax=sx+pr+16+o,ay=sy;c.strokeStyle=rgba(INK,0.55*a);c.lineWidth=1.2;c.lineCap='round';c.beginPath();c.moveTo(ax,ay);c.lineTo(ax+16,ay);c.moveTo(ax+11,ay-4);c.lineTo(ax+16,ay);c.lineTo(ax+11,ay+4);c.stroke()}
   // invitation
   inviteBox=null;
   if(S.inviteOn){const a=clamp(S.inviteT/3,0,1);const size=Math.min(18,W*0.045);const txt=COMPOSE.inviteShort||'成為小水滴';let x,y,br=1;
