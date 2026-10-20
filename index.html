@@ -33,7 +33,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--f);overflow:hidd
 #start h1{margin:0;font:400 clamp(30px,7vw,54px)/1 var(--f);letter-spacing:.35em;padding-left:.35em;color:var(--ink);background:rgba(251,249,243,.72);padding:.5em .6em .5em .95em}
 #start.gone{opacity:0;pointer-events:none}
 #start .st{display:flex;flex-direction:column;align-items:center;gap:14px}
-#start .tap{display:flex;align-items:center;gap:10px;font:400 15px/1 var(--f);letter-spacing:.08em;color:var(--mute);background:rgba(251,249,243,.72);padding:.55em 1em;animation:breath 3.2s ease-in-out infinite}
+#start .tap{display:flex;align-items:center;gap:10px;font:400 15px/1 var(--f);letter-spacing:.08em;color:var(--mute);padding:.55em 1em;text-shadow:0 0 6px var(--cream),0 0 12px var(--cream);animation:breath 3.2s ease-in-out infinite}
 #start .drop{display:block;width:10px;height:10px;border-radius:50%;background:var(--orange);animation:bob 1.6s ease-in-out infinite}
 @keyframes breath{0%,100%{opacity:.5}50%{opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.15)}}
@@ -133,7 +133,7 @@ const ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 
 // ---------- data (files override these fallbacks) ----------
 let LINES=["我也以為只有我在乎。","原來你也在這裡。","一滴水推不動什麼，可是我們不只一滴。","慢一點沒關係，我們一起漂。","回頭看，好多人。","十一月二十八日，見。"];
-let COMPOSE={inviteShort:"成為小水滴",title:"要不要成為一滴水，尋找並陪伴下一個小水滴？",presets:LINES.slice(),blank:{before:"這次，我想為",after:"站出來。",maxLen:8,words:["家人","孩子","這座城市","台灣"]}};
+let COMPOSE={inviteShort:"加入洋流",title:"要不要成為一滴水，尋找並陪伴下一個小水滴？",presets:LINES.slice(),blank:{before:"這次，我想為",after:"站出來。",maxLen:8,words:["家人","孩子","這座城市","台灣"]}};
 let FILTER={words:["幹","白痴","智障","去死"],patterns:["https?://","\\d{5,}"]};
 let MELODY=[],BARS=[],BPM=76;   // bars of [note, beats]; empty → random pentatonic pitch
 const load=(u)=>fetch(u).then(r=>r.ok?r.json():Promise.reject()).catch(()=>null);
@@ -172,7 +172,7 @@ function poolLines(){if(isEDay()){const c=LINES.filter(x=>!VOTE_RE.test(x));retu
 function nextLine(){if(!linePool.length)linePool=shuffle(poolLines());return linePool.pop()}
 
 // ---------- settings (#test) ----------
-const T={font:'serif',len:20,end:'line',over:'spread',pWait:true,pMax:false,pSlow:true,pPair:false,island:'AV',strait:'side',tws:'90',drift:2,mel:'finish',isle:'loop',bound:'mid',endHalo:true,endDim:true,inv:'follow',epN:150,proj:true,jit:true,wide:true,isleS:1.6,cam:'hold',isleLines:true,isleDark:true};
+const T={font:'serif',len:20,end:'line',over:'spread',pWait:true,pMax:false,pSlow:true,pPair:false,island:'AV',strait:'side',tws:'90',drift:2,mel:'finish',isle:'loop',bound:'mid',endHalo:true,endDim:true,inv:'bottom',epN:150,proj:true,jit:true,wide:true,isleS:1.6,cam:'hold',isleLines:true,isleDark:true};
 try{Object.assign(T,JSON.parse(localStorage.getItem('hl-test6')||'{}'))}catch(e){}
 const FONTS={wenkai:"'LXGW WenKai TC','Klee One',serif",sans:"'Noto Sans TC',sans-serif",serif:"'Noto Serif TC',serif"};
 function applyFont(){document.documentElement.style.setProperty('--f',`var(--f-${T.font})`);
@@ -198,7 +198,8 @@ let fl=[],parts=[],twl=[],BASE=0,lineScale=1,isleLines=[];
 const total=()=>+T.len;
 const prog=()=>Math.min(1,S.n/total());
 const radius=()=>Math.sqrt(S.R0*S.R0+S.n*81);
-const zf=()=>S.zoom*S.ez;               // field scale: keeps line texture constant on screen while the camera pulls back
+const zf=()=>S.zoom*S.ez;
+const VIS=()=>Math.pow(Math.min(1,S.zoom),0.5);   // things look smaller and slower as the camera pulls back               // field scale: keeps line texture constant on screen while the camera pulls back
 const Z=()=>0.5*S.zoom*S.ez*S.uz;       // world → screen
 function view(){const z=Z();return{z,hw:W/2/z,hh:H/2/z}}
 
@@ -363,7 +364,7 @@ function seedEp(){ // when the camera pulls back, there are droplets everywhere 
     const d=spawnOther(true,[x,y]);if(d){d.ep=true;d.onIs=inside;m++}}}
 function spawnGroup(){const d0=spawnOther(true);if(!d0)return;const z=Z();const n=3+(Math.random()*3|0);d0.amb=false;   // one of the group may come to you
   for(let k=1;k<n;k++){const a=Math.random()*Math.PI*2,r=(20+Math.random()*45)/z;spawnOther(true,[d0.x+Math.cos(a)*r,d0.y+Math.sin(a)*r])}}
-const oR=d=>Math.max(d.r0/S.zoom,2.2/Z());   // others keep their on-screen size as the camera pulls back
+const oR=d=>Math.max(d.r0/S.zoom*VIS(),2.2/Z());   // others keep their on-screen size as the camera pulls back
 
 // ---------- labels (lines near droplets) ----------
 function wantLabel(d){if(d.label||S.inviteOn)return;if(S.peeks)for(const p of S.peeks)if(p.d===d)p.gone=true,p.a=Math.min(p.a,0.01);const vis=S.labels.filter(l=>l.state!=='done');
@@ -511,11 +512,11 @@ function fillText(c,s,x,y,size,weight){const fam=FONTS[T.font];
 function measure(c,s,size){c.font=`400 ${size}px ${FONTS[T.font]}`;return c.measureText(s).width}
 
 // ---------- step ----------
-const SPD=1.3,TOUCH=matchMedia('(pointer: coarse)').matches;   // player speed (playtest: 1.3x)
+const QUIET=9,SPD=1.3,TOUCH=matchMedia('(pointer: coarse)').matches;   // player speed (playtest: 1.3x)
 function step(dt){
   S.t+=dt;const t=S.t;const sc=1/zf();
   const playing=S.phase!=='title';
-  if(S.phase==='play'){S.playT=(S.playT||0)+dt;if(steering())S.steerT=(S.steerT||0)+dt}
+  if(S.phase==='play'&&steering())S.steerT=(S.steerT||0)+dt;
   {const tg=S.phase==='play'&&(S.steerT||0)<1&&(S.playT||0)>0.6?1:0;S.tutA=(S.tutA||0)+(tg-(S.tutA||0))*Math.min(1,dt*(tg?2:3))}
   for(let i=S.fx.length-1;i>=0;i--){S.fx[i].t+=dt;if(S.fx[i].t>1.1)S.fx.splice(i,1)}
   S.pS+=(prog()-S.pS)*Math.min(1,dt*0.12);
@@ -538,7 +539,7 @@ function step(dt){
   S.pvx+=(tvx-S.pvx)*Math.min(1,dt*3);S.pvy+=(tvy-S.pvy)*Math.min(1,dt*3);
   S.px+=S.pvx*dt;S.py+=S.pvy*dt;
   // camera
-  const tz=S.R0/R;S.zoom+=(tz-S.zoom)*Math.min(1,dt*0.25);
+  const tz=S.R0/R;S.zoom+=(tz-S.zoom)*Math.min(1,dt*2.2);   // one step per merge, settles in about 1.5 s
   let cx=S.px,cy=S.py;
   if(T.cam==='hold'&&(S.phase==='play'||S.phase==='handoff')){const rest=stopped()&&(S.stopT||0)>0.6;
     if(rest&&t>(S.holdCool||0)){if(!S.hold)S.hold=[S.camx,S.camy];const z0=Z();const ox=(S.px-S.hold[0])*z0,oy=(S.py-S.hold[1])*z0;if(Math.abs(ox)>W*0.3||Math.abs(oy)>H*0.3){S.hold=null;S.holdCool=t+4}}else S.hold=null;
@@ -550,12 +551,12 @@ function step(dt){
   const{hw,hh}=view();
   const zNow=Z();if(S.lastZ){const ratio=zNow/S.lastZ;if(ratio<0.998){const p=1-ratio*ratio;for(const q of fl)if(Math.random()<p)Object.assign(q,newLine(hw,hh,false));for(const q of parts)if(Math.random()<p)Object.assign(q,newPart(hw,hh,false))}}S.lastZ=zNow;
   // flow
-  const fs=flowSpeed();
-  for(const q of parts){const an=fieldAngle(q.x,q.y,t);q.x+=Math.cos(an)*38*sc*fs*dt;q.y+=Math.sin(an)*38*sc*fs*dt;q.age+=dt*60;
+  const fs=flowSpeed(),vs=VIS();
+  for(const q of parts){const an=fieldAngle(q.x,q.y,t);q.x+=Math.cos(an)*38*sc*fs*vs*dt;q.y+=Math.sin(an)*38*sc*fs*vs*dt;q.age+=dt*60;
     if(q.age>q.life||Math.abs(q.x-S.camx)>hw*1.25||Math.abs(q.y-S.camy)>hh*1.25)Object.assign(q,newPart(hw,hh,false))}
   for(const v of S.vort){const an=fieldAngle(v.x,v.y,t);v.x+=Math.cos(an)*8*sc*dt;v.y+=Math.sin(an)*8*sc*dt;if(Math.abs(v.x-S.camx)>hw*1.5||Math.abs(v.y-S.camy)>hh*1.5)Object.assign(v,newVort(hw*0.85,hh*0.85))}
   const fr=S.mergeClock++,rec=(fr%3)===0,N=activeLines();
-  for(let i=0;i<N;i++){const q=fl[i];const[vx,vy]=vel(q.x,q.y,t);const gm=(i+fr)%4===0?(q.gm=gmag(q.x,q.y)):(q.gm||1);q.x+=vx*80*q.sp*gm*sc*fs*dt;q.y+=vy*80*q.sp*gm*sc*fs*dt;q.age+=dt*60;
+  for(let i=0;i<N;i++){const q=fl[i];const[vx,vy]=vel(q.x,q.y,t);const gm=(i+fr)%4===0?(q.gm=gmag(q.x,q.y)):(q.gm||1);q.x+=vx*80*q.sp*gm*sc*fs*vs*dt;q.y+=vy*80*q.sp*gm*sc*fs*vs*dt;q.age+=dt*60;
     if(rec){q.h.push(q.x,q.y);if(q.h.length>84)q.h.splice(0,2)}
     if((i+fr)%12===0){q.dn=dens(q.x,q.y);q.cv=Math.max(0,-gdiv(q.x,q.y))}
     {const th=(q.dn==null||q.dn<0.6)?1.8:5;if(q.cv>th)q.age+=dt*60*Math.min(15,(q.cv-th)*1.6)}
@@ -579,8 +580,9 @@ function step(dt){
   const wantCome=Math.round(2.6+2.6*Math.pow(pp,1.2)),wantAmb=Math.round(1.5+17*Math.pow(pp,1.2));   // about 3–4 on screen at first, 20–25 near the end
   const near=d=>d.pair<0&&Math.abs(d.x-S.camx)<hw*1.15&&Math.abs(d.y-S.camy)<hh*1.15;
   const nCome=S.others.filter(d=>near(d)&&!d.amb).length,nAmb=S.others.filter(d=>near(d)&&d.amb).length;
-  if(nCome<wantCome&&Math.random()<dt*0.8)spawnOther(false);
-  if(nAmb<wantAmb&&Math.random()<dt*3)spawnOther(true);
+  const quiet=S.phase==='play'&&(S.playT||0)<QUIET;   // the opening: only you and the current
+  if(!quiet&&nCome<wantCome&&Math.random()<dt*0.8)spawnOther(false);
+  if(!quiet&&nAmb<wantAmb&&Math.random()<dt*3)spawnOther(true);
   if(S.phase==='free'){const nEp=S.others.filter(d=>d.ep&&Math.abs(d.x-S.camx)<hw*1.1&&Math.abs(d.y-S.camy)<hh*1.1).length;
     for(let k=0;k<4&&nEp+k<T.epN;k++)if(Math.random()<dt*8){const d=spawnOther(true);if(d)d.ep=true}}
   if(pp>0.5&&S.phase!=='epilogue'){S.groupT=(S.groupT==null?6:S.groupT)-dt;if(S.groupT<=0){spawnGroup();S.groupT=11+Math.random()*7}}
@@ -671,7 +673,7 @@ function draw(){
       for(const q of pool){if(q.h.length<6)continue;const life=Math.min(1,q.age/40,(q.life-q.age)/30);if(life<=0)continue;TB[Math.min(3,((0.4+q.sh*0.6)*life*4)|0)].push(q)}
       TB.forEach((arr,lv)=>{if(!arr.length)return;c.strokeStyle=rgba(lv>1||dark>0.5?ORS[0]:ORS[1],(0.16+lv*0.17)*(1+0.6*dark));c.beginPath();for(const q of arr){const h=q.h;c.moveTo(h[0],h[1]);for(let j=2;j<h.length;j+=2)c.lineTo(h[j],h[j+1]);c.lineTo(q.x,q.y)}c.stroke()})}}
   const lw=1/z;
-  for(const q of parts){const life=Math.sin(Math.PI*Math.min(1,q.age/q.life));c.fillStyle=q.col?rgba(ORS[q.col-1],(q.c?0.75:0.5)*life):rgba(INK,(q.c?0.5:0.3)*life);c.beginPath();c.arc(q.x,q.y,q.s*lw*1.4,0,7);c.fill()}
+  for(const q of parts){const life=Math.sin(Math.PI*Math.min(1,q.age/q.life));c.fillStyle=q.col?rgba(ORS[q.col-1],(q.c?0.75:0.5)*life):rgba(INK,(q.c?0.5:0.3)*life);c.beginPath();c.arc(q.x,q.y,Math.max(q.s*lw*1.4*VIS(),0.7*lw),0,7);c.fill()}
   // flowing words
   c.textAlign='center';c.textBaseline='middle';
   const pxs=S.px,pys=S.py;for(const w of S.words){const near=clamp((Math.hypot(w.x-pxs,w.y-pys)*z-60)/140,0.15,1);const a=Math.min(1,w.age/2)*0.42*near;if(a<=0)continue;const ss=w.size*z;if(ss<3)continue;const sz=ss>15?15/z:w.size;c.fillStyle=rgba(INK,a*(ss>15?Math.max(0.25,15/ss):1));fillText(c,w.text,w.x,w.y,sz)}
@@ -697,10 +699,10 @@ function draw(){
   if(S.hintT!=null&&S.hintT<7){const a=clamp(S.hintT/1.2,0,1)*clamp((7-S.hintT)/1.5,0,1);const sz=Math.min(15,W*0.038);c.textAlign='center';c.textBaseline='middle';c.fillStyle=rgba(INK,0.75*a);fillText(c,'想留的時候，點一下你的水滴',W/2,H-Math.max(56,H*0.1),sz)}
   if((S.tutA||0)>0.01){const a=S.tutA,sz=Math.min(15,W*0.04);const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2,pr=Math.max(radius()*z,6);
     const txt=TOUCH?'按住拖動':'移動滑鼠，或用方向鍵';c.textAlign='center';c.textBaseline='middle';c.fillStyle=rgba(INK,0.7*a);fillText(c,txt,W/2,H-Math.max(64,H*0.12),sz);
-    const o=7*Math.sin(t*3.2),ax=sx+pr+16+o,ay=sy;c.strokeStyle=rgba(INK,0.55*a);c.lineWidth=1.2;c.lineCap='round';c.beginPath();c.moveTo(ax,ay);c.lineTo(ax+16,ay);c.moveTo(ax+11,ay-4);c.lineTo(ax+16,ay);c.lineTo(ax+11,ay+4);c.stroke()}
+}
   // invitation
   inviteBox=null;
-  if(S.inviteOn){const a=clamp(S.inviteT/3,0,1);const size=Math.min(18,W*0.045);const txt=COMPOSE.inviteShort||'成為小水滴';let x,y,br=1;
+  if(S.inviteOn){const a=clamp(S.inviteT/3,0,1);const size=Math.min(18,W*0.045);const txt=COMPOSE.inviteShort||'加入洋流';let x,y,br=1;
     if(T.inv==='follow'){const sx=(S.px-S.camx)*z+W/2,sy=(S.py-S.camy)*z+H/2;x=clamp(sx,80,W-80);y=clamp(sy+Math.max(radius()*z,6)+size*1.6,size*2,H-size*2)}
     else if(T.inv==='bottom'){x=W/2;y=H-Math.max(64,H*0.12);br=0.65+0.35*Math.sin(S.inviteT*1.6)}
     else{y=H*0.5+Math.sin(S.inviteT*0.4)*H*0.18;x=W/2+Math.sin(S.inviteT*0.23)*W*0.18}
