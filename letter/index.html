@@ -8,7 +8,7 @@
 <meta property="og:title" content="漂流信">
 <meta property="og:description" content="寫一封沒有特定收件人的信，說說你對這塊土地的愛，存成限動圖。">
 <meta property="og:url" content="https://miro2874.github.io/The-Taiwan-Current/letter/">
-<meta property="og:image" content="https://miro2874.github.io/The-Taiwan-Current/letter/bannerbg.jpg">
+<meta property="og:image" content="https://miro2874.github.io/The-Taiwan-Current/letter/bgT.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <style>html,body{margin:0}[hidden]{display:none!important}</style>
 </head>
@@ -79,7 +79,7 @@ footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;
   .frame canvas,.frame img{height:min(36vh,300px);width:auto;border-radius:9px}
   .wrap{gap:20px}
 }
-.thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 10px}
 .thumb{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
 .thumb input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
 .thumb canvas{width:100%;height:auto;aspect-ratio:9/16;border-radius:8px;border:3px solid transparent;background:var(--paper);display:block}
@@ -141,13 +141,15 @@ footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;
       <legend>信紙樣式</legend>
       <div class="hint">每張小圖都是你這封信套用後的樣子，看到喜歡的直接點。</div>
       <div class="thumbs" role="radiogroup" aria-label="信紙樣式">
-        <label class="thumb"><input type="radio" name="combo" value="A-h" checked><canvas width="216" height="384"></canvas><span>洋流橫幅<br>橫式</span></label>
-        <label class="thumb"><input type="radio" name="combo" value="A-v"><canvas width="216" height="384"></canvas><span>洋流橫幅<br>直式</span></label>
-        <label class="thumb"><input type="radio" name="combo" value="C-h"><canvas width="216" height="384"></canvas><span>靜默應援<br>橫式</span></label>
-        <label class="thumb"><input type="radio" name="combo" value="C-v"><canvas width="216" height="384"></canvas><span>靜默應援<br>直式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="T-h" checked><canvas width="216" height="384"></canvas><span>台灣<br>橫式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="T-v"><canvas width="216" height="384"></canvas><span>台灣<br>直式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="I-h"><canvas width="216" height="384"></canvas><span>台灣與離島<br>橫式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="I-v"><canvas width="216" height="384"></canvas><span>台灣與離島<br>直式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="O-h"><canvas width="216" height="384"></canvas><span>細流線<br>橫式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="O-v"><canvas width="216" height="384"></canvas><span>細流線<br>直式</span></label>
       </div>
       <div hidden>
-        <input type="radio" name="bg" id="bg-a" value="A" checked><input type="radio" name="bg" id="bg-c" value="C">
+        <input type="radio" name="bg" id="bg-t" value="T" checked><input type="radio" name="bg" id="bg-i" value="I"><input type="radio" name="bg" id="bg-o" value="O">
         <input type="radio" name="dir" id="dir-h" value="h" checked><input type="radio" name="dir" id="dir-v" value="v">
       </div>
     </fieldset>
@@ -166,7 +168,7 @@ footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;
     <div class="frame"><canvas id="cv" width="1080" height="1920" aria-label="漂流信限動圖預覽"></canvas></div>
   </aside>
 </main>
-<footer>支持者自製／Miro　·　信紙背景使用《洋流》應援素材，設計｜doctor design 許家綸</footer>
+<footer>支持者自製／Miro　·　信紙背景取自作品《匯聚洋流》</footer>
 
 <script>
 (() => {
@@ -177,7 +179,9 @@ const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
 const imgs = {};
 function loadImg(k, src){ return new Promise(r => { const i = new Image(); i.onload = () => { imgs[k] = i; r(); }; i.onerror = () => r(); i.src = src; }); }
-const ready = Promise.all([loadImg('A','bannerbg.jpg'), loadImg('C','silent.jpg')]);
+const ready = Promise.all([loadImg('T','bgT.jpg'), loadImg('I','bgI.jpg'), loadImg('O','bgO.jpg')]);
+// 每種背景的信紙位置：T 台灣在信紙後、I 信紙放下方讓台灣與離島完整露出、O 細流線
+const LAY = { T:{ cy:960, maxH:1000, textH:760 }, I:{ cy:1540, maxH:600, textH:480 }, O:{ cy:960, maxH:1100, textH:860 } };
 
 function readForm(){
   const toSel = document.querySelector('input[name=to]:checked').value;
@@ -243,7 +247,7 @@ function drawBg(d){
 }
 function drawCard(d, x, y, w, h){
   ctx.save();
-  if (d.bg === 'A'){
+  if (true){
     ctx.translate(x + w/2, y + h/2); ctx.rotate(-1.6 * Math.PI/180); ctx.translate(-w/2, -h/2);
     ctx.shadowColor = 'rgba(60,20,0,.30)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
     ctx.fillStyle = C.paper; ctx.fillRect(0,0,w,h);
@@ -276,13 +280,13 @@ function layoutH(d, f, textW, blank){
   return { items, height: y, lh };
 }
 function renderH(d, blank){
-  const A = d.bg === 'A';
-  const cardW = A ? 920 : 900, pad = 72, textW = cardW - pad*2;
-  const maxH = A ? 860 : 1180;
+  const Ly = LAY[d.bg] || LAY.T;
+  const cardW = 920, pad = 72, textW = cardW - pad*2;
+  const maxH = Ly.maxH;
   let f = 54, L;
   do { L = layoutH(d, f, textW, blank); if (L.height + pad*2 <= maxH) break; f -= 2; } while (f > 34);
-  const cardH = Math.max(L.height + pad*2, A ? 520 : 600);
-  const cx = (W - cardW)/2, cy = A ? 1280 - cardH/2 : 960 - cardH/2;
+  const cardH = Math.max(L.height + pad*2, 520);
+  const cx = (W - cardW)/2, cy = Ly.cy - cardH/2;
   const done = drawCard(d, cx, cy, cardW, cardH);
   const off = (cardH - L.height)/2;
   ctx.textBaseline = 'alphabetic';
@@ -314,8 +318,8 @@ function drawVCharInner(ch, x, y, f){
   }
 }
 function renderV(d, blank){
-  const A = d.bg === 'A';
-  const textH = A ? 640 : 900, pad = 66, maxW = A ? 880 : 860;
+  const Ly = LAY[d.bg] || LAY.T;
+  const textH = Ly.textH, pad = 66, maxW = 880;
   let f = 54, cols, sigCols, colW, cell, n, width;
   do {
     cell = f * 1.12; colW = f * 1.95; n = Math.floor(textH / cell);
@@ -328,8 +332,8 @@ function renderV(d, blank){
     if (width <= maxW) break; f -= 2;
   } while (f > 30);
   const tagH = d.tags.length ? f * 1.2 : 0;
-  const cardW = Math.max(width, A ? 560 : 600), cardH = textH + pad*2 + tagH;
-  const cx = (W - cardW)/2, cy = A ? 1270 - cardH/2 : 960 - cardH/2;
+  const cardW = Math.max(width, 560), cardH = textH + pad*2 + tagH;
+  const cx = (W - cardW)/2, cy = Ly.cy - cardH/2;
   const done = drawCard(d, cx, cy, cardW, cardH);
   let x = cardW - (cardW - width)/2 - pad - colW/2;
   for (const c of cols){
@@ -388,7 +392,7 @@ function drawThumbs(){
   drawBg(d); (d.dir === 'v' ? renderV : renderH)(d, false);   // 同一個步驟裡畫回主預覽，畫面不會閃
 }
 document.querySelectorAll('input[name=combo]').forEach(r => r.addEventListener('change', () => {
-  const [bg, dir] = r.value.split('-'); $(bg === 'A' ? 'bg-a' : 'bg-c').checked = true; $(dir === 'h' ? 'dir-h' : 'dir-v').checked = true;
+  const [bg, dir] = r.value.split('-'); $('bg-' + bg.toLowerCase()).checked = true; $(dir === 'h' ? 'dir-h' : 'dir-v').checked = true;
 }));
 window.__render = render;   // 供輸出空白信紙圖使用
 
