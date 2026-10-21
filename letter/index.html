@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="寫一封沒有特定收件人的信，說說你對這塊土地的愛，存成限動圖。">
 <meta property="og:type" content="website">
-<meta property="og:title" content="漂流告白信">
+<meta property="og:title" content="漂流信">
 <meta property="og:description" content="寫一封沒有特定收件人的信，說說你對這塊土地的愛，存成限動圖。">
 <meta property="og:url" content="https://miro2874.github.io/The-Taiwan-Current/letter/">
 <meta property="og:image" content="https://miro2874.github.io/The-Taiwan-Current/letter/bannerbg.jpg">
@@ -13,7 +13,7 @@
 <style>html,body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>漂流告白信</title>
+<title>漂流信</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,20 +90,19 @@ footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;
 </style>
 
 <header class="band"><div class="band-inner">
-  <h1>漂流告白信</h1>
+  <h1>漂流信</h1>
   <p>寫一封沒有特定收件人的信，說說你對這塊土地的愛。填好就能存成限動圖。</p>
 </div></header>
 
 <main class="wrap">
   <form id="f" autocomplete="off">
-    <div class="note">已經先填好一段範例，直接改成你自己的話就好。</div>
-
     <fieldset>
       <legend>這封信寫給誰</legend>
       <div class="chips" role="radiogroup">
         <label class="chip"><input type="radio" name="to" id="to-none" value="" checked><span>無</span></label>
         <label class="chip"><input type="radio" name="to" id="to-shen" value="給沈伯洋的話"><span>給沈伯洋的話</span></label>
         <label class="chip"><input type="radio" name="to" id="to-land" value="給這塊土地的話"><span>給這塊土地的話</span></label>
+        <label class="chip"><input type="radio" name="to" id="to-tw" value="給台灣的話"><span>給台灣的話</span></label>
         <label class="chip"><input type="radio" name="to" id="to-custom" value="custom"><span>自己寫</span></label>
       </div>
       <input type="text" id="toCustom" maxlength="14" placeholder="例如：給南投的話、給十年後的自己" hidden>
@@ -117,23 +116,24 @@ footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;
 
     <fieldset>
       <label class="lab" for="msg">想對他／這塊土地說的一句話</label>
-      <textarea id="msg" maxlength="90">我想相信一點一滴的小水滴，會匯成一股溫暖的洋流，慢慢改變這塊土地。</textarea>
+      <textarea id="msg" maxlength="90" placeholder="我想相信一點一滴的小水滴，會匯成一股溫暖的洋流，慢慢改變這塊土地。"></textarea>
       <div class="count"><span id="msgCount">0</span>／90</div>
     </fieldset>
 
     <fieldset>
       <label class="lab" for="sign">落款</label>
       <div class="chips"><label class="chip"><input type="checkbox" id="citizen"><span>加上「你的市民」</span></label></div>
-      <input type="text" id="sign" maxlength="20" value="一個住在台北的南投孩子">
+      <input type="text" id="sign" maxlength="20" placeholder="一個住在台北的南投孩子">
       <div class="hint">你的名字、身分，或一句描述自己的話。</div>
     </fieldset>
 
     <fieldset>
       <legend>Hashtag（可不加）</legend>
       <div class="chips">
-        <label class="chip"><input type="checkbox" id="tag1" value="#漂流告白信"><span>#漂流告白信</span></label>
-        <label class="chip"><input type="checkbox" id="tag2" value="#匯成洋流"><span>#匯成洋流</span></label>
-        <label class="chip"><input type="checkbox" id="tag3" value="#返鄉投票"><span>#返鄉投票</span></label>
+        <label class="chip"><input type="checkbox" id="tag1" value="#漂流信"><span>#漂流信</span></label>
+        <label class="chip"><input type="checkbox" id="tag2" value="#返鄉投票"><span>#返鄉投票</span></label>
+        <label class="chip"><input type="checkbox" id="tag3" value="#台北順起來"><span>#台北順起來</span></label>
+        <label class="chip"><input type="checkbox" id="tag4" value="#洋流"><span>#洋流</span></label>
       </div>
     </fieldset>
 
@@ -163,7 +163,7 @@ footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;
   </form>
 
   <aside class="preview" aria-label="限動圖預覽">
-    <div class="frame"><canvas id="cv" width="1080" height="1920" aria-label="漂流告白信限動圖預覽"></canvas></div>
+    <div class="frame"><canvas id="cv" width="1080" height="1920" aria-label="漂流信限動圖預覽"></canvas></div>
   </aside>
 </main>
 <footer>支持者自製／Miro　·　信紙背景使用洋流應援素材</footer>
@@ -182,8 +182,8 @@ const ready = Promise.all([loadImg('A','bannerbg.jpg'), loadImg('C','silent.jpg'
 function readForm(){
   const toSel = document.querySelector('input[name=to]:checked').value;
   const to = toSel === 'custom' ? $('toCustom').value.trim() : toSel;
-  const tags = ['tag1','tag2','tag3'].filter(id => $(id).checked).map(id => $(id).value);
-  return { citizen: $('citizen').checked, to, cause: $('cause').value.trim(), msg: $('msg').value.trim(), sign: $('sign').value.trim(), tags,
+  const tags = ['tag1','tag2','tag3','tag4'].filter(id => $(id).checked).map(id => $(id).value);
+  return { citizen: $('citizen').checked, to, cause: $('cause').value.trim(), msg: $('msg').value.trim() || $('msg').placeholder, sign: $('sign').value.trim() || $('sign').placeholder, tags,
     bg: document.querySelector('input[name=bg]:checked').value, dir: document.querySelector('input[name=dir]:checked').value };
 }
 
@@ -398,21 +398,31 @@ const dlPromise = (window.claude && window.claude.use) ? window.claude.use('down
 function showFallback(){
   $('fallback').hidden = false;
 }
+function stillExample(){
+  const miss = [];
+  if (!$('msg').value.trim()) miss.push('想說的一句話');
+  if (!$('sign').value.trim()) miss.push('落款');
+  if (!miss.length) return false;
+  $('saveStatus').textContent = `還是範例文字喔：先寫下你的「${miss.join('」和「')}」，再存圖。`;
+  $(!$('msg').value.trim() ? 'msg' : 'sign').focus();
+  return true;
+}
 $('save').addEventListener('click', async () => {
   $('saveStatus').textContent = '';
+  if (stillExample()) return;
   await render();
   if (!dl){
     // 一般瀏覽器：直接下載；同時把預覽換成真正的圖片，下載被擋（例如 IG 內建瀏覽器）時可以長按儲存
     const url = cv.toDataURL('image/png');
-    try { const a = document.createElement('a'); a.href = url; a.download = '漂流告白信.png'; document.body.appendChild(a); a.click(); a.remove(); } catch(e){}
+    try { const a = document.createElement('a'); a.href = url; a.download = '漂流信.png'; document.body.appendChild(a); a.click(); a.remove(); } catch(e){}
     let img = document.querySelector('.frame img');
-    if (!img){ img = document.createElement('img'); img.alt = '漂流告白信限動圖'; cv.after(img); }
+    if (!img){ img = document.createElement('img'); img.alt = '漂流信限動圖'; cv.after(img); }
     img.src = url; cv.hidden = true; showFallback();
     $('saveStatus').textContent = '已下載；如果沒有，長按（或右鍵）預覽圖就能儲存。';
     return;
   }
   cv.toBlob(async blob => {
-    try { await dl.save({ filename: '漂流告白信.png', data: blob }); $('saveStatus').textContent = '已存好，記得發限動！'; }
+    try { await dl.save({ filename: '漂流信.png', data: blob }); $('saveStatus').textContent = '已存好，記得發限動！'; }
     catch(e){
       const code = e && e.code;
       $('saveStatus').textContent = code === 'declined' ? '沒有儲存。' : code === 'rate_limited' ? '稍等一下再試一次。' : '這裡無法下載，請長按預覽圖儲存。';
@@ -424,11 +434,12 @@ $('save').addEventListener('click', async () => {
 // ---------- 分享這張圖（手機跳出分享選單：IG 限動、LINE…；不支援就改成下載） ----------
 $('share').addEventListener('click', async () => {
   $('saveStatus').textContent = '';
+  if (stillExample()) return;
   await render();
   cv.toBlob(async blob => {
-    const file = new File([blob], '漂流告白信.png', { type: 'image/png' });
+    const file = new File([blob], '漂流信.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })){
-      try { await navigator.share({ files: [file], title: '漂流告白信' }); $('saveStatus').textContent = '分享出去了！'; return; }
+      try { await navigator.share({ files: [file], title: '漂流信' }); $('saveStatus').textContent = '分享出去了！'; return; }
       catch(e){ if (e && e.name === 'AbortError') return; }
     }
     $('saveStatus').textContent = '這個瀏覽器不能直接分享圖片，先幫你存下來，再到 IG 發限動。';
