@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="寫一封沒有特定收件人的信，說說你對這塊土地的愛，存成限動圖。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="漂流告白信">
+<meta property="og:description" content="寫一封沒有特定收件人的信，說說你對這塊土地的愛，存成限動圖。">
+<meta property="og:url" content="https://miro2874.github.io/The-Taiwan-Current/letter/">
+<meta property="og:image" content="https://miro2874.github.io/The-Taiwan-Current/letter/bannerbg.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>html,body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>漂流告白信</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Klee+One:wght@400;600&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<style>
+/* 版面：橘色抬頭帶＋左表單右預覽（窄螢幕上下排）；刻意單一配色，延續洋流主視覺 */
+:root{
+  --orange:#E8561B; --orange-deep:#C8410C; --cream:#FBF9F3; --paper:#F3EEE3;
+  --ink:#161412; --muted:#6B5F55; --line:#E2D8C8;
+  --display:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --hand:"LXGW WenKai TC","Kaiti TC","DFKai-SB",serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--cream);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.6}
+.band{background:var(--orange);color:var(--ink);padding-block:28px 22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band-inner,.wrap{max-width:1080px;margin:0 auto}
+.band h1{font-weight:900;font-size:clamp(40px,8vw,72px);line-height:1;margin:0;letter-spacing:.04em}
+.band p{margin:10px 0 0;font-weight:500;max-width:36em;text-wrap:balance}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:32px;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}.preview{order:-1}}
+form{display:flex;flex-direction:column;gap:22px;min-width:0}
+.note{font-size:13px;color:var(--muted);background:var(--paper);border-left:4px solid var(--orange);padding:8px 12px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+legend,label.lab{font-weight:700;font-size:14px;letter-spacing:.06em;padding:0;margin-bottom:2px}
+.hint{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.chip span{display:inline-block;padding:7px 14px;border:2px solid var(--ink);border-radius:999px;font-weight:700;font-size:14px;background:var(--cream)}
+.chip input:checked+span{background:var(--ink);color:var(--cream)}
+.chip input:focus-visible+span{outline:3px solid var(--orange);outline-offset:2px}
+input[type=text],textarea{width:100%;font:inherit;font-family:var(--hand);font-size:18px;padding:10px 12px;border:2px solid var(--ink);border-radius:4px;background:#fff;color:var(--ink)}
+textarea{min-height:110px;resize:vertical;line-height:1.7}
+input[type=text]:focus,textarea:focus{outline:3px solid var(--orange);outline-offset:1px}
+.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--display);font-weight:500;font-size:17px}
+.inline input{flex:1 1 140px;width:auto;min-width:0;max-width:100%}
+.count{font-size:12px;color:var(--muted);text-align:right}
+.preview{align-self:start;display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (min-width:821px){.preview{position:sticky;top:max(16px,env(safe-area-inset-top,0px))}}
+@media (max-width:820px){.frame,.btns{max-width:260px}}
+.frame{background:var(--ink);padding:10px;border-radius:22px;max-width:340px;width:100%;margin:0 auto}
+.frame canvas,.frame img{display:block;width:100%;height:auto;border-radius:14px;aspect-ratio:9/16}
+.btns{display:flex;flex-direction:column;gap:8px;max-width:340px;width:100%;margin:0 auto}
+button{font:inherit;font-weight:900;font-size:16px;letter-spacing:.06em;padding:12px 16px;border:2px solid var(--ink);border-radius:4px;cursor:pointer;background:var(--orange);color:var(--ink)}
+button.ghost{background:var(--cream)}
+button:hover{background:var(--orange-deep);color:var(--cream)}
+button.ghost:hover{background:var(--ink);color:var(--cream)}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.actions{display:flex;flex-direction:column;gap:8px;border-top:2px solid var(--line);padding-top:18px}
+.actions .row{display:flex;gap:10px;flex-wrap:wrap}
+.actions .row button{flex:1 1 140px}
+.status{font-size:13px;min-height:1.4em;text-align:center;color:var(--muted)}
+.fallback{font-size:12px;color:var(--muted);text-align:center}
+footer{font-size:12px;color:var(--muted);text-align:center;padding-block:0 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* 手機：預覽黏在畫面上方，表單在下面捲動，打字時一直看得到 */
+@media (max-width:820px){
+  .preview{position:sticky;top:0;z-index:5;flex-direction:row;align-items:center;justify-content:center;gap:12px;
+    background:var(--cream);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px));
+    box-shadow:0 8px 12px -10px rgba(22,20,18,.35)}
+  .frame{width:auto;max-width:none;margin:0;padding:6px;border-radius:14px;flex:none}
+  .frame canvas,.frame img{height:min(36vh,300px);width:auto;border-radius:9px}
+  .wrap{gap:20px}
+}
+.thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.thumb{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.thumb input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.thumb canvas{width:100%;height:auto;aspect-ratio:9/16;border-radius:8px;border:3px solid transparent;background:var(--paper);display:block}
+.thumb input:checked~canvas{border-color:var(--ink)}
+.thumb input:focus-visible~canvas{outline:3px solid var(--orange);outline-offset:2px}
+.thumb span{font-size:12px;font-weight:700;text-align:center;line-height:1.3}
+.thumb input:checked~span{color:var(--orange-deep)}
+</style>
+
+<header class="band"><div class="band-inner">
+  <h1>漂流告白信</h1>
+  <p>寫一封沒有特定收件人的信，說說你對這塊土地的愛。填好就能存成限動圖。</p>
+</div></header>
+
+<main class="wrap">
+  <form id="f" autocomplete="off">
+    <div class="note">已經先填好一段範例，直接改成你自己的話就好。</div>
+
+    <fieldset>
+      <legend>這封信寫給誰</legend>
+      <div class="chips" role="radiogroup">
+        <label class="chip"><input type="radio" name="to" id="to-none" value="" checked><span>無</span></label>
+        <label class="chip"><input type="radio" name="to" id="to-shen" value="給沈伯洋的話"><span>給沈伯洋的話</span></label>
+        <label class="chip"><input type="radio" name="to" id="to-land" value="給這塊土地的話"><span>給這塊土地的話</span></label>
+        <label class="chip"><input type="radio" name="to" id="to-custom" value="custom"><span>自己寫</span></label>
+      </div>
+      <input type="text" id="toCustom" maxlength="14" placeholder="例如：給南投的話、給十年後的自己" hidden>
+    </fieldset>
+
+    <fieldset>
+      <label class="lab" for="cause">這次，我想為＿＿站出來（選填）</label>
+      <div class="inline">這次，我想為 <input type="text" id="cause" maxlength="16" placeholder="例如：我長大的家鄉"> 站出來。</div>
+      <div class="hint">可以是一個地方、一群人、一件你在意的事。不填就不會出現這一句。</div>
+    </fieldset>
+
+    <fieldset>
+      <label class="lab" for="msg">想對他／這塊土地說的一句話</label>
+      <textarea id="msg" maxlength="90">我想相信一點一滴的小水滴，會匯成一股溫暖的洋流，慢慢改變這塊土地。</textarea>
+      <div class="count"><span id="msgCount">0</span>／90</div>
+    </fieldset>
+
+    <fieldset>
+      <label class="lab" for="sign">落款</label>
+      <div class="chips"><label class="chip"><input type="checkbox" id="citizen"><span>加上「你的市民」</span></label></div>
+      <input type="text" id="sign" maxlength="20" value="一個住在台北的南投孩子">
+      <div class="hint">你的名字、身分，或一句描述自己的話。</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Hashtag（可不加）</legend>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" id="tag1" value="#漂流告白信"><span>#漂流告白信</span></label>
+        <label class="chip"><input type="checkbox" id="tag2" value="#匯成洋流"><span>#匯成洋流</span></label>
+        <label class="chip"><input type="checkbox" id="tag3" value="#返鄉投票"><span>#返鄉投票</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>信紙樣式</legend>
+      <div class="hint">每張小圖都是你這封信套用後的樣子，看到喜歡的直接點。</div>
+      <div class="thumbs" role="radiogroup" aria-label="信紙樣式">
+        <label class="thumb"><input type="radio" name="combo" value="A-h" checked><canvas width="216" height="384"></canvas><span>洋流橫幅<br>橫式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="A-v"><canvas width="216" height="384"></canvas><span>洋流橫幅<br>直式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="C-h"><canvas width="216" height="384"></canvas><span>靜默應援<br>橫式</span></label>
+        <label class="thumb"><input type="radio" name="combo" value="C-v"><canvas width="216" height="384"></canvas><span>靜默應援<br>直式</span></label>
+      </div>
+      <div hidden>
+        <input type="radio" name="bg" id="bg-a" value="A" checked><input type="radio" name="bg" id="bg-c" value="C">
+        <input type="radio" name="dir" id="dir-h" value="h" checked><input type="radio" name="dir" id="dir-v" value="v">
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <div class="row">
+        <button type="button" id="save">存成限動圖</button>
+        <button type="button" class="ghost" id="share">分享這張圖</button>
+      </div>
+      <div class="status" id="saveStatus" aria-live="polite"></div>
+      <div class="fallback" id="fallback" hidden>如果沒有跳出下載：長按（或右鍵）上面的預覽圖就能儲存。</div>
+    </div>
+  </form>
+
+  <aside class="preview" aria-label="限動圖預覽">
+    <div class="frame"><canvas id="cv" width="1080" height="1920" aria-label="漂流告白信限動圖預覽"></canvas></div>
+  </aside>
+</main>
+<footer>支持者自製／Miro　·　信紙背景使用洋流應援素材</footer>
+
+<script>
+(() => {
+const W = 1080, H = 1920;
+const C = { orange:'#E8561B', ink:'#161412', paper:'#FBF9F3', rule:'rgba(232,86,27,.22)' };
+const HAND = '"LXGW WenKai TC", "Kaiti TC", serif';
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+const imgs = {};
+function loadImg(k, src){ return new Promise(r => { const i = new Image(); i.onload = () => { imgs[k] = i; r(); }; i.onerror = () => r(); i.src = src; }); }
+const ready = Promise.all([loadImg('A','bannerbg.jpg'), loadImg('C','silent.jpg')]);
+
+function readForm(){
+  const toSel = document.querySelector('input[name=to]:checked').value;
+  const to = toSel === 'custom' ? $('toCustom').value.trim() : toSel;
+  const tags = ['tag1','tag2','tag3'].filter(id => $(id).checked).map(id => $(id).value);
+  return { citizen: $('citizen').checked, to, cause: $('cause').value.trim(), msg: $('msg').value.trim(), sign: $('sign').value.trim(), tags,
+    bg: document.querySelector('input[name=bg]:checked').value, dir: document.querySelector('input[name=dir]:checked').value };
+}
+
+// ---------- 混字：霞鶩文楷會把「為」畫成「爲」，這個字改用同源的 Klee One ----------
+const FIX = '為';
+const KLEE = '"Klee One", serif';
+function fixFont(font){ return font.replace(HAND, KLEE).replace(/^700 /, '600 '); }
+function runs(text){ const out = []; let cur = '', isFix = false;
+  for (const ch of text){ const f = FIX.includes(ch); if (f !== isFix && cur){ out.push([cur, isFix]); cur = ''; } isFix = f; cur += ch; }
+  if (cur) out.push([cur, isFix]); return out; }
+function measureMixed(text, font){ let w = 0; for (const [t, f] of runs(text)){ ctx.font = f ? fixFont(font) : font; w += ctx.measureText(t).width; } return w; }
+function fillMixed(text, x, y, font, align){
+  const w = measureMixed(text, font); let cx = align === 'right' ? x - w : align === 'center' ? x - w/2 : x;
+  const prev = ctx.textAlign; ctx.textAlign = 'left';
+  for (const [t, f] of runs(text)){ ctx.font = f ? fixFont(font) : font; ctx.fillText(t, cx, y); cx += ctx.measureText(t).width; }
+  ctx.textAlign = prev; }
+
+// ---------- 文字排版 ----------
+const NO_START = '，。、；：！？」』）〉》…—～,.!?';
+function wrapH(text, font, maxW){
+  ctx.font = font; const out = []; let line = '';
+  for (const ch of text){
+    if (ch === '\n'){ out.push(line); line=''; continue; }
+    const t = line + ch;
+    if (measureMixed(t, font) > maxW && line){
+      if (NO_START.includes(ch)){ line = t; continue; }
+      out.push(line); line = ch;
+    } else line = t;
+  }
+  if (line) out.push(line);
+  return out;
+}
+function wrapV(text, n){
+  const out = []; let col = '';
+  for (const ch of text){
+    if (ch === '\n'){ out.push(col); col=''; continue; }
+    if ([...col].length >= n){
+      if (NO_START.includes(ch)){ col += ch; continue; }
+      out.push(col); col = ch;
+    } else col += ch;
+  }
+  if (col) out.push(col);
+  return out;
+}
+
+function bodyText(d){
+  const parts = [];
+  if (d.cause) parts.push(`這次，我想為${d.cause}站出來。`);
+  if (d.msg) parts.push(d.msg);
+  return parts;
+}
+
+// ---------- 背景與紙卡 ----------
+function drawBg(d){
+  ctx.fillStyle = C.orange; ctx.fillRect(0,0,W,H);
+  const im = imgs[d.bg]; if (im) ctx.drawImage(im, 0, 0, W, H);
+}
+function drawCard(d, x, y, w, h){
+  ctx.save();
+  if (d.bg === 'A'){
+    ctx.translate(x + w/2, y + h/2); ctx.rotate(-1.6 * Math.PI/180); ctx.translate(-w/2, -h/2);
+    ctx.shadowColor = 'rgba(60,20,0,.30)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
+    ctx.fillStyle = C.paper; ctx.fillRect(0,0,w,h);
+    ctx.shadowColor = 'transparent';
+  } else {
+    ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(251,249,243,.86)'; ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle = 'rgba(22,20,18,.85)'; ctx.lineWidth = 2; ctx.strokeRect(1,1,w-2,h-2);
+  }
+  return () => ctx.restore();   // 呼叫者在卡片座標系裡畫字，畫完再 restore
+}
+
+// ---------- 橫式 ----------
+function layoutH(d, f, textW, blank){
+  const lh = f * 1.9, items = [];
+  let y = 0;
+  if (d.to){ items.push({ t: d.to, font:`700 ${f*1.06}px ${HAND}`, y: y + f, kind:'head' }); y += lh * 1.15; }
+  if (blank){
+    for (let i = 0; i < 5; i++){ items.push({ t:'', y: y + f, rule:true }); y += lh; }
+  } else {
+    for (const p of bodyText(d)){
+      for (const l of wrapH(p, `400 ${f}px ${HAND}`, textW)){ items.push({ t:l, font:`400 ${f}px ${HAND}`, y:y + f, rule:true }); y += lh; }
+    }
+  }
+  y += f * 0.5;
+  const sf = f * 0.74;
+  if (d.citizen){ items.push({ t:'你的市民', font:`400 ${sf}px ${HAND}`, y: y + sf, kind:'sign', orange:true }); y += sf * 1.7; }
+  items.push({ t: blank ? '＿＿＿＿＿＿' : d.sign, font:`400 ${sf}px ${HAND}`, y: y + sf, kind:'sign' }); y += sf * 1.9;
+  if (d.tags.length){ const tf = f*0.6; items.push({ t:d.tags.join('  '), font:`700 ${tf}px ${HAND}`, y: y + tf, kind:'tag' }); y += tf * 1.8; }
+  return { items, height: y, lh };
+}
+function renderH(d, blank){
+  const A = d.bg === 'A';
+  const cardW = A ? 920 : 900, pad = 72, textW = cardW - pad*2;
+  const maxH = A ? 860 : 1180;
+  let f = 54, L;
+  do { L = layoutH(d, f, textW, blank); if (L.height + pad*2 <= maxH) break; f -= 2; } while (f > 34);
+  const cardH = Math.max(L.height + pad*2, A ? 520 : 600);
+  const cx = (W - cardW)/2, cy = A ? 1280 - cardH/2 : 960 - cardH/2;
+  const done = drawCard(d, cx, cy, cardW, cardH);
+  const off = (cardH - L.height)/2;
+  ctx.textBaseline = 'alphabetic';
+  for (const it of L.items){
+    if (it.rule){ ctx.strokeStyle = C.rule; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(pad, off + it.y + f*0.42); ctx.lineTo(cardW - pad, off + it.y + f*0.42); ctx.stroke(); }
+    if (!it.t) continue;
+    ctx.fillStyle = (it.kind === 'tag' || it.orange) ? C.orange : C.ink;
+    fillMixed(it.t, it.kind === 'sign' ? cardW - pad : pad, off + it.y, it.font, it.kind === 'sign' ? 'right' : 'left');
+  }
+  done();
+}
+
+// ---------- 直式 ----------
+const ROT = '「」『』（）〈〉《》—…～－-';
+const PUNC = '，。、；：！？．';
+function drawVChar(ch, x, y, f){
+  const base = ctx.font;
+  if (FIX.includes(ch)) ctx.font = fixFont(base);
+  drawVCharInner(ch, x, y, f);
+  ctx.font = base;
+}
+function drawVCharInner(ch, x, y, f){
+  if (ROT.includes(ch)){
+    ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI/2); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ch, 0, 0); ctx.restore();
+  } else if (PUNC.includes(ch)){
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ch, x + f*0.3, y - f*0.32);
+  } else {
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ch, x, y);
+  }
+}
+function renderV(d, blank){
+  const A = d.bg === 'A';
+  const textH = A ? 640 : 900, pad = 66, maxW = A ? 880 : 860;
+  let f = 54, cols, sigCols, colW, cell, n, width;
+  do {
+    cell = f * 1.12; colW = f * 1.95; n = Math.floor(textH / cell);
+    cols = d.to ? [{ t:d.to, bold:true }, { t:'' }] : [];
+    const body = blank ? ['', '', '', '', ''] : bodyText(d);
+    for (const p of body){ const w = p ? wrapV(p, n) : ['']; for (const c of w) cols.push({ t:c }); }
+    const sn = Math.floor(textH / (f*0.78));
+    sigCols = (d.citizen ? [{ t:'你的市民', orange:true }] : []).concat(wrapV(blank ? '＿＿＿＿＿' : d.sign, sn).map(t => ({ t })));
+    width = cols.length * colW + (sigCols.length ? sigCols.length * colW * 0.7 + colW*0.3 : 0) + pad*2;
+    if (width <= maxW) break; f -= 2;
+  } while (f > 30);
+  const tagH = d.tags.length ? f * 1.2 : 0;
+  const cardW = Math.max(width, A ? 560 : 600), cardH = textH + pad*2 + tagH;
+  const cx = (W - cardW)/2, cy = A ? 1270 - cardH/2 : 960 - cardH/2;
+  const done = drawCard(d, cx, cy, cardW, cardH);
+  let x = cardW - (cardW - width)/2 - pad - colW/2;
+  for (const c of cols){
+    if (!blank || c.t || true){
+      ctx.strokeStyle = C.rule; ctx.lineWidth = 2;
+      if (!c.bold){ ctx.beginPath(); ctx.moveTo(x - colW/2, pad); ctx.lineTo(x - colW/2, pad + textH); ctx.stroke(); }
+    }
+    ctx.fillStyle = C.ink; ctx.font = `${c.bold ? 700 : 400} ${f}px ${HAND}`;
+    let y = pad + cell/2;
+    for (const ch of c.t){ drawVChar(ch, x, y, f); y += cell; }
+    x -= colW;
+  }
+  const sf = f * 0.74, sc = sf * 1.12; x += colW*0.3;
+  const signLen = Math.max(0, ...sigCols.filter(s => !s.orange).map(s => [...s.t].length));
+  const signTop = pad + textH - signLen*sc;   // 「你的市民」和落款的頂端切齊
+  for (const s of sigCols){
+    x -= colW*0.7; ctx.fillStyle = s.orange ? C.orange : C.ink; ctx.font = `400 ${sf}px ${HAND}`;
+    const len = [...s.t].length; let y = (s.orange ? signTop : pad + textH - len*sc) + sc/2;
+    for (const ch of s.t){ drawVChar(ch, x, y, sf); y += sc; }
+  }
+  if (d.tags.length){
+    ctx.font = `700 ${f*0.6}px ${HAND}`; ctx.fillStyle = C.orange; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(d.tags.join('  '), cardW/2, pad + textH + tagH*0.6);
+  }
+  done();
+}
+
+async function ensureFonts(d){
+  const s = d.to + d.cause + d.msg + d.sign + d.tags.join('') + '這次，我想為站出來。你的市民＿';
+  try { await Promise.all([document.fonts.load(`400 40px "LXGW WenKai TC"`, s), document.fonts.load(`700 40px "LXGW WenKai TC"`, s),
+    document.fonts.load(`400 40px "Klee One"`, FIX), document.fonts.load(`600 40px "Klee One"`, FIX)]); } catch(e){}
+}
+
+let seq = 0;
+async function render(blank = false, override){
+  const my = ++seq;
+  const d = override || readForm();
+  await ready; await ensureFonts(d);
+  if (my !== seq) return;
+  drawBg(d);
+  (d.dir === 'v' ? renderV : renderH)(d, blank);
+  $('msgCount').textContent = [...$('msg').value].length;
+  if (!override && !blank) queueThumbs();
+}
+// ---------- 樣式小圖：每張都是這封信套用該樣式的樣子 ----------
+let thumbT = null;
+function queueThumbs(){ clearTimeout(thumbT); thumbT = setTimeout(drawThumbs, 250); }
+function drawThumbs(){
+  const d = readForm();
+  for (const lab of document.querySelectorAll('.thumb')){
+    const [bg, dir] = lab.querySelector('input').value.split('-');
+    const dd = Object.assign({}, d, { bg, dir });
+    drawBg(dd); (dir === 'v' ? renderV : renderH)(dd, false);
+    const tc = lab.querySelector('canvas'); tc.getContext('2d').drawImage(cv, 0, 0, tc.width, tc.height);
+  }
+  drawBg(d); (d.dir === 'v' ? renderV : renderH)(d, false);   // 同一個步驟裡畫回主預覽，畫面不會閃
+}
+document.querySelectorAll('input[name=combo]').forEach(r => r.addEventListener('change', () => {
+  const [bg, dir] = r.value.split('-'); $(bg === 'A' ? 'bg-a' : 'bg-c').checked = true; $(dir === 'h' ? 'dir-h' : 'dir-v').checked = true;
+}));
+window.__render = render;   // 供輸出空白信紙圖使用
+
+// ---------- 存圖 ----------
+let dl = null, dlChecked = false;
+const dlPromise = (window.claude && window.claude.use) ? window.claude.use('downloads').then(x => { dl = x; dlChecked = true; if (!x) showFallback(); }).catch(() => { dlChecked = true; showFallback(); }) : (showFallback(), Promise.resolve());
+function showFallback(){
+  $('fallback').hidden = false;
+}
+$('save').addEventListener('click', async () => {
+  $('saveStatus').textContent = '';
+  await render();
+  if (!dl){
+    // 一般瀏覽器：直接下載；同時把預覽換成真正的圖片，下載被擋（例如 IG 內建瀏覽器）時可以長按儲存
+    const url = cv.toDataURL('image/png');
+    try { const a = document.createElement('a'); a.href = url; a.download = '漂流告白信.png'; document.body.appendChild(a); a.click(); a.remove(); } catch(e){}
+    let img = document.querySelector('.frame img');
+    if (!img){ img = document.createElement('img'); img.alt = '漂流告白信限動圖'; cv.after(img); }
+    img.src = url; cv.hidden = true; showFallback();
+    $('saveStatus').textContent = '已下載；如果沒有，長按（或右鍵）預覽圖就能儲存。';
+    return;
+  }
+  cv.toBlob(async blob => {
+    try { await dl.save({ filename: '漂流告白信.png', data: blob }); $('saveStatus').textContent = '已存好，記得發限動！'; }
+    catch(e){
+      const code = e && e.code;
+      $('saveStatus').textContent = code === 'declined' ? '沒有儲存。' : code === 'rate_limited' ? '稍等一下再試一次。' : '這裡無法下載，請長按預覽圖儲存。';
+      if (code !== 'declined' && code !== 'rate_limited') showFallback();
+    }
+  }, 'image/png');
+});
+
+// ---------- 分享這張圖（手機跳出分享選單：IG 限動、LINE…；不支援就改成下載） ----------
+$('share').addEventListener('click', async () => {
+  $('saveStatus').textContent = '';
+  await render();
+  cv.toBlob(async blob => {
+    const file = new File([blob], '漂流告白信.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      try { await navigator.share({ files: [file], title: '漂流告白信' }); $('saveStatus').textContent = '分享出去了！'; return; }
+      catch(e){ if (e && e.name === 'AbortError') return; }
+    }
+    $('saveStatus').textContent = '這個瀏覽器不能直接分享圖片，先幫你存下來，再到 IG 發限動。';
+    $('save').click();
+  }, 'image/png');
+});
+
+// ---------- 互動 ----------
+function onInput(){
+  const custom = $('to-custom').checked; $('toCustom').hidden = !custom;
+  const img = document.querySelector('.frame img'); if (img){ img.remove(); cv.hidden = false; }
+  render();
+}
+$('f').addEventListener('input', onInput);
+$('f').addEventListener('change', onInput);
+$('f').addEventListener('submit', e => e.preventDefault());
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
+render();
+})();
+</script>
+</body>
+</html>
