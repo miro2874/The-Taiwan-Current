@@ -447,6 +447,14 @@ $('share').addEventListener('click', async () => {
   }, 'image/png');
 });
 
+// ---------- 投票日（台北時間 2026-11-28 整天）：隱藏候選人選項與競選口號 ----------
+const FAKE = new URLSearchParams(location.search).get('date');
+const today = FAKE || new Date(Date.now() + 8*3600e3).toISOString().slice(0, 10);
+if (today === '2026-11-28'){
+  for (const id of ['to-shen', 'tag3']){ const el = $(id); el.checked = false; el.closest('label').hidden = true; }
+  if (!document.querySelector('input[name=to]:checked')) $('to-none').checked = true;
+}
+
 // ---------- 互動 ----------
 function onInput(){
   const custom = $('to-custom').checked; $('toCustom').hidden = !custom;
